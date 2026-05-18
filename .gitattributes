@@ -1,0 +1,60 @@
+# Normalize line endings on commit. All text files are stored LF in the index.
+# Shell scripts and other Unix-executed files MUST be LF or bash chokes on
+# Linux runners (e.g. `$'\r': command not found`). Repos cloned from this
+# template inherit this — without it, init-app.sh broke on the Copilot
+# cloud agent and required a manual `sed -i 's/\r$//'` step every time.
+
+* text=auto eol=lf
+
+# Source code
+*.cs       text eol=lf
+*.razor    text eol=lf
+*.cshtml   text eol=lf
+*.csproj   text eol=lf
+*.props    text eol=lf
+*.targets  text eol=lf
+*.sln      text eol=lf
+*.slnx     text eol=lf
+
+# Web assets
+*.html     text eol=lf
+*.css      text eol=lf
+*.scss     text eol=lf
+*.js       text eol=lf
+*.mjs      text eol=lf
+*.cjs      text eol=lf
+*.ts       text eol=lf
+*.json     text eol=lf
+
+# Config & docs
+*.md       text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.toml     text eol=lf
+*.xml      text eol=lf
+.gitattributes text eol=lf
+.gitignore     text eol=lf
+.editorconfig  text eol=lf
+
+# Unix-executed (must be LF — bash refuses CRLF)
+*.sh       text eol=lf
+*.bash     text eol=lf
+
+# Windows-executed (keep CRLF)
+*.ps1      text eol=crlf
+*.bat      text eol=crlf
+*.cmd      text eol=crlf
+
+# Binaries
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.ico      binary
+*.webm     binary
+*.mp4      binary
+*.pdf      binary
+*.zip      binary
+*.db       binary
+*.dll      binary
+*.exe      binary
