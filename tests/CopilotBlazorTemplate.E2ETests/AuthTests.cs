@@ -2,8 +2,9 @@ using Microsoft.Playwright;
 
 namespace CopilotBlazorTemplate.E2ETests;
 
-[Collection("E2E")]
-public class AuthTests
+// These tests exercise the real login UI, so they do a full interactive login
+// rather than reusing the cached storage state.
+public class AuthTests : IClassFixture<PlaywrightFixture>
 {
     private readonly PlaywrightFixture _fixture;
 
@@ -12,7 +13,7 @@ public class AuthTests
     [Fact]
     public async Task Login_Page_Renders_Form()
     {
-        await using var context = await _fixture.NewContextAsync();
+        await using var context = await _fixture.NewAnonymousContextAsync();
         var page = await context.NewPageAsync();
         await page.GotoAsync($"{_fixture.BaseUrl}/Account/Login");
 
@@ -46,7 +47,7 @@ public class AuthTests
     [Fact]
     public async Task Invalid_Password_Shows_Error_Message()
     {
-        await using var context = await _fixture.NewContextAsync();
+        await using var context = await _fixture.NewAnonymousContextAsync();
         var page = await context.NewPageAsync();
         await page.GotoAsync($"{_fixture.BaseUrl}/Account/Login");
         await page.GetByLabel("Email").FillAsync("admin@template.local");
@@ -60,7 +61,7 @@ public class AuthTests
     [Fact]
     public async Task Unknown_Email_Shows_Error_Message()
     {
-        await using var context = await _fixture.NewContextAsync();
+        await using var context = await _fixture.NewAnonymousContextAsync();
         var page = await context.NewPageAsync();
         await page.GotoAsync($"{_fixture.BaseUrl}/Account/Login");
         await page.GetByLabel("Email").FillAsync("nobody@template.local");
@@ -73,7 +74,7 @@ public class AuthTests
     [Fact]
     public async Task Empty_Submission_Shows_Validation_Errors()
     {
-        await using var context = await _fixture.NewContextAsync();
+        await using var context = await _fixture.NewAnonymousContextAsync();
         var page = await context.NewPageAsync();
         await page.GotoAsync($"{_fixture.BaseUrl}/Account/Login");
         await page.GetByRole(AriaRole.Button, new() { Name = "Log in" }).ClickAsync();

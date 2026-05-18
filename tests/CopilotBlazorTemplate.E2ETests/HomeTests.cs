@@ -2,8 +2,7 @@ using Microsoft.Playwright;
 
 namespace CopilotBlazorTemplate.E2ETests;
 
-[Collection("E2E")]
-public class HomeTests
+public class HomeTests : IClassFixture<PlaywrightFixture>
 {
     private readonly PlaywrightFixture _fixture;
 
@@ -12,7 +11,7 @@ public class HomeTests
     [Fact]
     public async Task Landing_Page_Shows_Hero_Content()
     {
-        await using var context = await _fixture.NewContextAsync();
+        await using var context = await _fixture.NewAnonymousContextAsync();
         var page = await context.NewPageAsync();
         await page.GotoAsync(_fixture.BaseUrl);
 
@@ -23,7 +22,7 @@ public class HomeTests
     [Fact]
     public async Task Landing_Page_Has_Correct_Title()
     {
-        await using var context = await _fixture.NewContextAsync();
+        await using var context = await _fixture.NewAnonymousContextAsync();
         var page = await context.NewPageAsync();
         await page.GotoAsync(_fixture.BaseUrl);
 
@@ -33,7 +32,7 @@ public class HomeTests
     [Fact]
     public async Task Clicking_Login_Link_Navigates_To_Login_Page()
     {
-        await using var context = await _fixture.NewContextAsync();
+        await using var context = await _fixture.NewAnonymousContextAsync();
         var page = await context.NewPageAsync();
         await page.GotoAsync(_fixture.BaseUrl);
         await page.GetByRole(AriaRole.Link, new() { Name = "Login" }).ClickAsync();
@@ -45,7 +44,8 @@ public class HomeTests
     [Fact]
     public async Task Authenticated_User_Redirected_From_Home_To_Dashboard()
     {
-        var page = await _fixture.LoginAsAsync("user@template.local", "User123!");
+        await using var context = await _fixture.NewUserContextAsync();
+        var page = await context.NewPageAsync();
         await page.GotoAsync(_fixture.BaseUrl);
         await page.WaitForURLAsync("**/dashboard**");
 

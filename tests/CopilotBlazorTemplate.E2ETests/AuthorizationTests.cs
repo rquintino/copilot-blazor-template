@@ -2,8 +2,7 @@ using Microsoft.Playwright;
 
 namespace CopilotBlazorTemplate.E2ETests;
 
-[Collection("E2E")]
-public class AuthorizationTests
+public class AuthorizationTests : IClassFixture<PlaywrightFixture>
 {
     private readonly PlaywrightFixture _fixture;
 
@@ -12,7 +11,7 @@ public class AuthorizationTests
     [Fact]
     public async Task Unauthenticated_Dashboard_Redirects_To_Login()
     {
-        await using var context = await _fixture.NewContextAsync();
+        await using var context = await _fixture.NewAnonymousContextAsync();
         var page = await context.NewPageAsync();
         await page.GotoAsync($"{_fixture.BaseUrl}/dashboard");
         await page.WaitForURLAsync("**/Account/Login**");
@@ -24,7 +23,7 @@ public class AuthorizationTests
     [Fact]
     public async Task Unauthenticated_Admin_Page_Redirects_To_Login()
     {
-        await using var context = await _fixture.NewContextAsync();
+        await using var context = await _fixture.NewAnonymousContextAsync();
         var page = await context.NewPageAsync();
         await page.GotoAsync($"{_fixture.BaseUrl}/admin");
         await page.WaitForURLAsync("**/Account/Login**");
@@ -35,7 +34,9 @@ public class AuthorizationTests
     [Fact]
     public async Task Admin_Sidebar_Includes_Admin_Link()
     {
-        var page = await _fixture.LoginAsAsync("admin@template.local", "Admin123!");
+        await using var context = await _fixture.NewAdminContextAsync();
+        var page = await context.NewPageAsync();
+        await page.GotoAsync($"{_fixture.BaseUrl}/dashboard");
 
         await Assertions.Expect(page.Locator(".sidebar-nav").GetByRole(AriaRole.Link, new() { Name = "Admin" }))
             .ToBeVisibleAsync();
@@ -44,7 +45,9 @@ public class AuthorizationTests
     [Fact]
     public async Task User_Sidebar_Hides_Admin_Link()
     {
-        var page = await _fixture.LoginAsAsync("user@template.local", "User123!");
+        await using var context = await _fixture.NewUserContextAsync();
+        var page = await context.NewPageAsync();
+        await page.GotoAsync($"{_fixture.BaseUrl}/dashboard");
 
         await Assertions.Expect(page.Locator(".sidebar-nav").GetByRole(AriaRole.Link, new() { Name = "Dashboard" }))
             .ToBeVisibleAsync();
@@ -55,7 +58,8 @@ public class AuthorizationTests
     [Fact]
     public async Task Admin_Can_Open_Admin_Page_And_See_User_Table()
     {
-        var page = await _fixture.LoginAsAsync("admin@template.local", "Admin123!");
+        await using var context = await _fixture.NewAdminContextAsync();
+        var page = await context.NewPageAsync();
         await page.GotoAsync($"{_fixture.BaseUrl}/admin");
 
         await Assertions.Expect(page.Locator("h1")).ToContainTextAsync("Admin Panel");
@@ -65,7 +69,8 @@ public class AuthorizationTests
     [Fact]
     public async Task Admin_Page_Lists_All_Seeded_Users()
     {
-        var page = await _fixture.LoginAsAsync("admin@template.local", "Admin123!");
+        await using var context = await _fixture.NewAdminContextAsync();
+        var page = await context.NewPageAsync();
         await page.GotoAsync($"{_fixture.BaseUrl}/admin");
 
         await Assertions.Expect(page.GetByText("admin@template.local")).ToBeVisibleAsync();
@@ -76,10 +81,10 @@ public class AuthorizationTests
     [Fact]
     public async Task NonAdmin_User_Cannot_Access_Admin_Page()
     {
-        var page = await _fixture.LoginAsAsync("user@template.local", "User123!");
+        await using var context = await _fixture.NewUserContextAsync();
+        var page = await context.NewPageAsync();
         await page.GotoAsync($"{_fixture.BaseUrl}/admin");
 
-        // Either redirected to access denied, or rendered without admin content
         var url = page.Url;
         var bodyText = await page.Locator("body").TextContentAsync() ?? "";
         Assert.True(

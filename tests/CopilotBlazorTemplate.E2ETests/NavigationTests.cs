@@ -2,8 +2,7 @@ using Microsoft.Playwright;
 
 namespace CopilotBlazorTemplate.E2ETests;
 
-[Collection("E2E")]
-public class NavigationTests
+public class NavigationTests : IClassFixture<PlaywrightFixture>
 {
     private readonly PlaywrightFixture _fixture;
 
@@ -12,7 +11,9 @@ public class NavigationTests
     [Fact]
     public async Task Admin_Can_Navigate_Sidebar_Dashboard_To_Admin()
     {
-        var page = await _fixture.LoginAsAsync("admin@template.local", "Admin123!");
+        await using var context = await _fixture.NewAdminContextAsync();
+        var page = await context.NewPageAsync();
+        await page.GotoAsync($"{_fixture.BaseUrl}/dashboard");
 
         await page.Locator(".sidebar-nav").GetByRole(AriaRole.Link, new() { Name = "Admin" }).ClickAsync();
         await page.WaitForURLAsync("**/admin");
@@ -26,12 +27,11 @@ public class NavigationTests
     [Fact]
     public async Task Logout_Signs_User_Out()
     {
+        // Real login so the post-logout cookie state on this context is observable.
         var page = await _fixture.LoginAsAsync("user@template.local", "User123!");
         await page.GetByRole(AriaRole.Button, new() { Name = "Logout" }).ClickAsync();
-        // Logout posts and redirects to "/"; wait for the navigation to settle.
-        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await page.WaitForURLAsync(new System.Text.RegularExpressions.Regex(".*/(?!Account).*$"));
 
-        // Now accessing a protected page should redirect to login.
         await page.GotoAsync($"{_fixture.BaseUrl}/dashboard");
         await page.WaitForURLAsync("**/Account/Login**");
         Assert.Contains("/Account/Login", page.Url);
@@ -40,7 +40,7 @@ public class NavigationTests
     [Fact]
     public async Task Unknown_Route_Renders_NotFound_Page()
     {
-        await using var context = await _fixture.NewContextAsync();
+        await using var context = await _fixture.NewAnonymousContextAsync();
         var page = await context.NewPageAsync();
         await page.GotoAsync($"{_fixture.BaseUrl}/this-route-does-not-exist");
 
@@ -50,7 +50,9 @@ public class NavigationTests
     [Fact]
     public async Task Dashboard_Has_Expected_Page_Title()
     {
-        var page = await _fixture.LoginAsAsync("admin@template.local", "Admin123!");
+        await using var context = await _fixture.NewAdminContextAsync();
+        var page = await context.NewPageAsync();
+        await page.GotoAsync($"{_fixture.BaseUrl}/dashboard");
 
         await Assertions.Expect(page).ToHaveTitleAsync(new System.Text.RegularExpressions.Regex("Dashboard"));
     }
