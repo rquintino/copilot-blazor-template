@@ -1,0 +1,45 @@
+@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Identity
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<div class="sidebar-layout">
+    <nav class="sidebar">
+        <div class="sidebar-brand">Copilot Blazor</div>
+        <div class="sidebar-nav">
+            <a href="/dashboard">Dashboard</a>
+            <AuthorizeView Roles="Admin">
+                <Authorized>
+                    <a href="/admin">Admin</a>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">@displayName</div>
+            <form method="post" action="Account/Logout">
+                <button type="submit" class="btn-primary">Logout</button>
+            </form>
+        </div>
+    </nav>
+    <main class="main-content">
+        @Body
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private string? displayName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authState.User);
+        displayName = user?.DisplayName ?? authState.User.Identity?.Name ?? "User";
+    }
+}

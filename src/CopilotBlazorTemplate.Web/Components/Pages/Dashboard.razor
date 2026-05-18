@@ -1,0 +1,42 @@
+@page "/dashboard"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@layout AuthenticatedLayout
+
+@using Microsoft.AspNetCore.Identity
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Dashboard</PageTitle>
+
+<h1>Dashboard</h1>
+
+@if (displayName is not null)
+{
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <h2>Welcome, @displayName!</h2>
+        <p>Your role: <span class="badge">@role</span></p>
+    </div>
+
+    <div class="card">
+        <p>This is where your app content goes. Customize this page for your project.</p>
+    </div>
+}
+
+@code {
+    private string? displayName;
+    private string? role;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authState.User);
+        if (user is not null)
+        {
+            displayName = user.DisplayName;
+            var roles = await UserManager.GetRolesAsync(user);
+            role = roles.FirstOrDefault() ?? "User";
+        }
+    }
+}

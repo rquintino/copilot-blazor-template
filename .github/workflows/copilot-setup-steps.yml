@@ -1,0 +1,35 @@
+name: "Copilot Setup Steps"
+on: workflow_dispatch
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dotnet-ef
+        run: dotnet tool install --global dotnet-ef
+      - name: Install Playwright CLI
+        run: npm install -g @playwright/cli@latest --minimum-release-age=0
+      - name: Install Playwright skills
+        run: |
+          playwright-cli install || true
+          playwright-cli install --skills || true
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Install Blazor Blueprint MCP
+        run: npx @blazorblueprint/mcp@latest || true
+      - name: Restore and Build
+        run: |
+          dotnet restore || true
+          dotnet build || true
+      - name: Verify versions
+        run: |
+          dotnet --version
+          node --version
+          npm --version
