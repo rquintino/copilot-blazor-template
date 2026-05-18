@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Parse dotnet TRX files and build a sticky PR comment summary."""
+# smoke-test: trigger CI to verify the sticky comment workflow
 from __future__ import annotations
 
 import os
