@@ -1,0 +1,70 @@
+@page "/admin"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin")]
+@layout AuthenticatedLayout
+
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Admin</PageTitle>
+
+<h1>Admin Panel</h1>
+
+<div class="alert-info">
+    This page is only visible to Admin users.
+</div>
+
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Display Name</th>
+                <th>Roles</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var userInfo in users)
+            {
+                <tr>
+                    <td>@userInfo.Email</td>
+                    <td>@userInfo.DisplayName</td>
+                    <td>
+                        @foreach (var r in userInfo.Roles)
+                        {
+                            <span class="badge">@r</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<UserInfo> users = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var allUsers = await UserManager.Users.ToListAsync();
+        foreach (var user in allUsers)
+        {
+            var roles = await UserManager.GetRolesAsync(user);
+            users.Add(new UserInfo
+            {
+                Email = user.Email ?? "",
+                DisplayName = user.DisplayName ?? "",
+                Roles = roles.ToList()
+            });
+        }
+    }
+
+    private sealed class UserInfo
+    {
+        public string Email { get; set; } = "";
+        public string DisplayName { get; set; } = "";
+        public List<string> Roles { get; set; } = new();
+    }
+}

@@ -1,7 +1,24 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
 
-<PageTitle>Home</PageTitle>
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
-<h1>Hello, world!</h1>
+<PageTitle>Copilot Blazor Template</PageTitle>
 
-Welcome to your new app.
+<div class="hero">
+    <h1>Copilot Blazor Template</h1>
+    <p>A minimal, agent-ready Blazor starter with auth</p>
+    <a href="Account/Login" class="btn-primary">Login</a>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            NavigationManager.NavigateTo("/dashboard");
+        }
+    }
+}
