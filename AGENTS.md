@@ -73,5 +73,8 @@ If you are a sub-agent delegated work by an orchestrator: the rules above apply 
 
 ## Browser Automation
 
-- **Ad-hoc browser interaction** (debugging, exploring pages, screenshots): use the **Playwright MCP** server. It is auto-configured for the Copilot cloud agent and scoped to `localhost`/`127.0.0.1` by default. Do not install or invoke the standalone Playwright JS CLI.
-- **E2E tests**: use `Microsoft.Playwright` (NuGet) inside `tests/CopilotBlazorTemplate.E2ETests/`. Browsers install via `pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium` after `dotnet build`.
+Pick the tool by **what you're doing**, not by what's available:
+
+- **Screenshot / demo-video capture (batch):** `bash scripts/demo.sh`. **Do not** use Playwright MCP for this. The Copilot cloud agent's managed Playwright MCP holds a singleton chromium profile and, once touched, returns `Browser is already in use for /root/.cache/ms-playwright/mcp-chrome, use --isolated`. The suggested `--isolated` flag is **not** user-passable in the managed MCP, and the failure is **not** recoverable from inside the agent — clearing `SingletonLock`, `pkill`-ing chromium, or wiping the profile dir all do nothing (the MCP server tracks state in-process and `pkill` is sandbox-blocked anyway). `scripts/demo.sh` uses an independent npm-Playwright install under `/tmp/pw-runner` (pre-installed by `.github/workflows/copilot-setup-steps.yml`) and is unaffected. See `.github/skills/screenshots-demo/SKILL.md`.
+- **Ad-hoc single-page inspection** (pre-flight verification of one page, debugging a render issue): Playwright MCP is fine, one page at a time. It is auto-configured for the Copilot cloud agent and scoped to `localhost`/`127.0.0.1`. Do not install or invoke the standalone Playwright JS CLI.
+- **E2E tests:** `Microsoft.Playwright` (NuGet) inside `tests/CopilotBlazorTemplate.E2ETests/`. Browsers install via `pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium` after `dotnet build`.
