@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -30,7 +34,13 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Unit Tests
-        run: dotnet test tests/CopilotBlazorTemplate.UnitTests/ --configuration Release --no-build --verbosity normal
+        id: unit_tests
+        continue-on-error: true
+        run: |
+          dotnet test tests/CopilotBlazorTemplate.UnitTests/ \
+            --configuration Release --no-build --verbosity normal \
+            --logger "trx;LogFileName=unit.trx" \
+            --results-directory TestResults/unit
 
       - name: Install Playwright Browsers
         run: |
@@ -39,7 +49,60 @@ jobs:
           pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium
 
       - name: E2E Tests
-        run: dotnet test tests/CopilotBlazorTemplate.E2ETests/ --configuration Release --verbosity normal
+        id: e2e_tests
+        continue-on-error: true
+        run: |
+          dotnet test tests/CopilotBlazorTemplate.E2ETests/ \
+            --configuration Release --verbosity normal \
+            --logger "trx;LogFileName=e2e.trx" \
+            --results-directory TestResults/e2e
+
+      - name: Build Test Summary
+        if: always() && github.event_name == 'pull_request'
+        id: summary
+        run: python3 .github/scripts/build_test_summary.py
+        env:
+          UNIT_TRX: TestResults/unit/unit.trx
+          E2E_TRX: TestResults/e2e/e2e.trx
+          UNIT_OUTCOME: ${{ steps.unit_tests.outcome }}
+          E2E_OUTCOME: ${{ steps.e2e_tests.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+
+      - name: Post / Update PR Comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('TestResults/summary.md', 'utf8');
+            const marker = '<!-- ci-test-summary -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner, repo, issue_number, per_page: 100,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner, repo, comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number, body,
+              });
+            }
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload Screenshots
         if: always()
@@ -49,3 +112,11 @@ jobs:
           path: docs/screenshots/
           retention-days: 7
           if-no-files-found: ignore
+
+      - name: Fail if any tests failed
+        if: always()
+        run: |
+          if [ "${{ steps.unit_tests.outcome }}" != "success" ] || [ "${{ steps.e2e_tests.outcome }}" != "success" ]; then
+            echo "Unit: ${{ steps.unit_tests.outcome }} | E2E: ${{ steps.e2e_tests.outcome }}"
+            exit 1
+          fi
