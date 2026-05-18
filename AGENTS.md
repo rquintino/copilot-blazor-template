@@ -14,6 +14,16 @@
 └── .github/                            # Workflows, instructions, agents
 ```
 
+## Skills
+
+Inspect `.github/skills/<name>/SKILL.md` and invoke when the trigger fires:
+
+- **bootstrap-new-app** — FIRST action when `grep -rIlq CopilotBlazorTemplate . --exclude-dir={.git,bin,obj,node_modules}` finds matches AND the user is asking for a new app/feature/domain. Renames the template via `scripts/init-app.sh` before any other work.
+- **task-orchestration** — Move existing tasks through `tasks/backlog/ → current/ → done/`. Main agent does NOT create persisted tasks; sub-step decomposition uses the built-in todo tool.
+- **validator** — Run after each phase, before moving a task to `done/`.
+- **screenshots-demo** — When UI pages were added or changed.
+- **playwright-e2e** — When authoring or maintaining E2E tests under `tests/CopilotBlazorTemplate.E2ETests/`.
+
 ## Commands
 
 | Action | Command |
