@@ -1,3 +1,8 @@
+---
+name: screenshots-demo
+description: Capture page screenshots (PNG) and record the full-flow demo video (WebM) for the app. Use when UI pages were added or changed, when refreshing the README's screenshot row, or when the user asks for a demo. Config-driven via `docs/screenshots.config.json` — edit that file (not the script) to change what gets captured. Entry point is `bash scripts/demo.sh`. Includes a required Playwright MCP pre-flight verification of every configured page before capture, and a required post-capture screenshot inspection. NEVER attempts the capture batch through Playwright MCP itself — see the MCP singleton-lock callout in the body.
+---
+
 # Screenshots & Demo Video Capture Skill
 
 ## Overview

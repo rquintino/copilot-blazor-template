@@ -1,3 +1,8 @@
+---
+name: playwright-e2e
+description: Author or maintain Playwright end-to-end tests under `tests/CopilotBlazorTemplate.E2ETests/` (or the renamed `*.E2ETests/` after bootstrap). Use when adding tests for a new page or flow, debugging an existing E2E failure, working with `WebApplicationFactory<Program>` fixtures, or anything involving Microsoft.Playwright + xUnit in this repo. Does NOT cover ad-hoc browser inspection (use Playwright MCP) or screenshot/demo capture (use `screenshots-demo`).
+---
+
 # Playwright E2E Testing Skill
 
 ## Overview
