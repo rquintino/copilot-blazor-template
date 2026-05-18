@@ -18,6 +18,8 @@
         <div class="sidebar-footer">
             <div class="sidebar-user">@displayName</div>
             <form method="post" action="Account/Logout">
+                <AntiforgeryToken />
+                <input type="hidden" name="returnUrl" value="/" />
                 <button type="submit" class="btn-primary">Logout</button>
             </form>
         </div>

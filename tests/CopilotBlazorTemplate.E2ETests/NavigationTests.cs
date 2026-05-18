@@ -28,8 +28,10 @@ public class NavigationTests
     {
         var page = await _fixture.LoginAsAsync("user@template.local", "User123!");
         await page.GetByRole(AriaRole.Button, new() { Name = "Logout" }).ClickAsync();
+        // Logout posts and redirects to "/"; wait for the navigation to settle.
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        // After logout, accessing a protected page should send us back to login.
+        // Now accessing a protected page should redirect to login.
         await page.GotoAsync($"{_fixture.BaseUrl}/dashboard");
         await page.WaitForURLAsync("**/Account/Login**");
         Assert.Contains("/Account/Login", page.Url);

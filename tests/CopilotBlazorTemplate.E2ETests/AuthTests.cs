@@ -29,7 +29,7 @@ public class AuthTests
 
         await Assertions.Expect(page).ToHaveURLAsync(new System.Text.RegularExpressions.Regex(".*/dashboard.*"));
         await Assertions.Expect(page.Locator("h1")).ToContainTextAsync("Dashboard");
-        await Assertions.Expect(page.GetByText("Administrator")).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator("h2")).ToContainTextAsync("Administrator");
         await Assertions.Expect(page.Locator(".badge").First).ToContainTextAsync("Admin");
     }
 
@@ -39,7 +39,7 @@ public class AuthTests
         var page = await _fixture.LoginAsAsync("user@template.local", "User123!");
 
         await Assertions.Expect(page.Locator("h1")).ToContainTextAsync("Dashboard");
-        await Assertions.Expect(page.GetByText("Demo User")).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator("h2")).ToContainTextAsync("Demo User");
         await Assertions.Expect(page.Locator(".badge").First).ToContainTextAsync("User");
     }
 
