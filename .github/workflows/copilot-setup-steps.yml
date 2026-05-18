@@ -17,14 +17,11 @@ jobs:
           node-version: "22"
       - name: Install dotnet-ef
         run: dotnet tool install --global dotnet-ef
-      - name: Install Playwright CLI
-        run: npm install -g @playwright/cli@latest --minimum-release-age=0
-      - name: Install Playwright skills
-        run: |
-          playwright-cli install || true
-          playwright-cli install --skills || true
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+      # Note: Playwright MCP is auto-configured for the Copilot cloud agent
+      # (docs.github.com/en/copilot/concepts/agents/cloud-agent/mcp-and-cloud-agent),
+      # so the JS Playwright CLI is not installed here. Use the MCP server for
+      # ad-hoc browser interaction. The .NET E2E suite uses Microsoft.Playwright
+      # (NuGet) and installs browsers via playwright.ps1 — see .github/workflows/ci.yml.
       - name: Restore and Build
         run: |
           dotnet restore

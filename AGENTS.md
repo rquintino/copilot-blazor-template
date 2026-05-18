@@ -57,3 +57,8 @@
 2. Make changes
 3. Run `dotnet build` and `dotnet test`
 4. Commit and push
+
+## Browser Automation
+
+- **Ad-hoc browser interaction** (debugging, exploring pages, screenshots): use the **Playwright MCP** server. It is auto-configured for the Copilot cloud agent and scoped to `localhost`/`127.0.0.1` by default. Do not install or invoke the standalone Playwright JS CLI.
+- **E2E tests**: use `Microsoft.Playwright` (NuGet) inside `tests/CopilotBlazorTemplate.E2ETests/`. Browsers install via `pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium` after `dotnet build`.
