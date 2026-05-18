@@ -27,6 +27,17 @@ jobs:
           dotnet build
       - name: Install Playwright Browsers (.NET E2E)
         run: pwsh tests/CopilotBlazorTemplate.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+      - name: Pre-install Playwright (npm) for scripts/demo.sh
+        # Matches scripts/demo.sh ensure_playwright(): npm playwright into
+        # /tmp/pw-runner + chromium. Pre-installing here avoids ~45s install
+        # on the agent's first `bash scripts/demo.sh` and keeps screenshot
+        # capture working when the default Playwright MCP server's singleton
+        # chromium profile is locked (which the agent cannot pass --isolated to).
+        run: |
+          mkdir -p /tmp/pw-runner
+          npm install --silent --no-audit --no-fund --ignore-scripts \
+            --prefix /tmp/pw-runner playwright
+          /tmp/pw-runner/node_modules/.bin/playwright install chromium
       - name: Verify versions
         run: |
           dotnet --version

@@ -11,6 +11,8 @@ That's it. The script kills any stale process on :5177, resets the SQLite DB so 
 
 Outputs land in `docs/screenshots/<name>.png` and `docs/demo/<outputFile>`.
 
+> **Capture goes through `scripts/demo.sh`, never through Playwright MCP.** The Copilot cloud agent's default Playwright MCP server uses a singleton chromium profile and returns `Browser is already in use for /root/.cache/ms-playwright/mcp-chrome` once it has been touched. `--isolated` is not user-configurable in that MCP. Do **not** try to clear lock files, kill chrome processes, or wipe the profile dir — none of it recovers within the session. The npm-Playwright install used by `scripts/demo.sh` lives in `/tmp/pw-runner` (pre-installed by `.github/workflows/copilot-setup-steps.yml`), so it is independent of the MCP profile and the first call is fast. Use MCP for **single-page pre-flight verification only**; use `scripts/demo.sh` for the actual capture batch.
+
 ## REQUIRED — pre-flight page verification
 
 **Do not run `scripts/demo.sh` until every page listed in `docs/screenshots.config.json` (and every step in `demo.steps`) has been opened in Playwright MCP and visually confirmed working.** A passing build is not enough — runtime errors, blank components, missing data, broken nav, and auth redirects only show up in the rendered page. Past demo videos have shipped with broken pages because this step was skipped.
