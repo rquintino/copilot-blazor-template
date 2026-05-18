@@ -1,0 +1,10 @@
+{
+  "hooks": [
+    {
+      "name": "format-csharp",
+      "event": "postToolUse",
+      "pattern": "**/*.cs",
+      "command": ".github/hooks/scripts/format-csharp.sh"
+    }
+  ]
+}
