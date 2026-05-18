@@ -21,4 +21,8 @@
     <ProjectReference Include="..\CopilotBlazorTemplate.Core\CopilotBlazorTemplate.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="CopilotBlazorTemplate.E2ETests" />
+  </ItemGroup>
+
 </Project>
