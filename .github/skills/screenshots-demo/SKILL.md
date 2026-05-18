@@ -11,6 +11,27 @@ That's it. The script kills any stale process on :5177, resets the SQLite DB so 
 
 Outputs land in `docs/screenshots/<name>.png` and `docs/demo/<outputFile>`.
 
+## REQUIRED — pre-flight page verification
+
+**Do not run `scripts/demo.sh` until every page listed in `docs/screenshots.config.json` (and every step in `demo.steps`) has been opened in Playwright MCP and visually confirmed working.** A passing build is not enough — runtime errors, blank components, missing data, broken nav, and auth redirects only show up in the rendered page. Past demo videos have shipped with broken pages because this step was skipped.
+
+Procedure:
+
+1. Start the app the same way `scripts/demo.sh` would: kill :5177, delete `src/CopilotBlazorTemplate.Web/Data/app.db`, then `dotnet run --project src/CopilotBlazorTemplate.Web` against `http://localhost:5177` (keep the app running for the whole pre-flight).
+2. For every screenshot entry and every `demo.steps[].path` in the config — **especially pages you added or changed this task** — use the Playwright MCP server to:
+   - Navigate to the page (logging in first if `auth` is set; use the credentials from the config).
+   - Wait long enough for the Blazor InteractiveServer SignalR connection to settle (~2s; match the entry's `waitMs` if set).
+   - Take a snapshot / accessibility tree and confirm: no error banner, no empty `<main>`, expected headings/components present, expected data rows visible, interactive elements clickable.
+   - For pages with actions in `demo.steps` (forms, buttons, nav), exercise the action and confirm the resulting state.
+3. If any page fails: fix it first, then restart pre-flight from step 1. **Never** run `scripts/demo.sh` against a known-broken page just to "see how it looks" — re-recording is cheap, but a broken demo wastes review time.
+4. Stop the app before running `scripts/demo.sh` (the script will start its own).
+
+## REQUIRED — post-capture screenshot inspection
+
+After `scripts/demo.sh` finishes, **read each generated `docs/screenshots/*.png` with the Read tool** (it surfaces images visually) before declaring the demo done. Look for: blank/white regions where content should be, error toasts, login redirects on pages that should be authenticated, off-viewport content, console-error overlays. If a screenshot is wrong, fix the page (or the config — `waitMs`, `auth`, `path`) and re-run.
+
+The video itself isn't directly inspectable from the agent, so the screenshots are your proxy: if every screenshot of every changed page looks right, the video almost always does too.
+
 ## Adding or changing pages
 Edit `docs/screenshots.config.json`. Example: to add a `/transfers` screenshot when building a banking feature:
 
