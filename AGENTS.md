@@ -53,10 +53,13 @@
 
 ## Task Workflow
 
-1. Create a branch from `main`
-2. Make changes
-3. Run `dotnet build` and `dotnet test`
-4. Commit and push
+1. Create a branch from `main`.
+2. Make changes.
+3. Run `dotnet build` and `dotnet test`.
+4. **Commit. Do NOT `git push`.** In the Copilot coding-agent environment, `git push` fails at the credential layer — retrying with different tokens, `gh`, the API, or MCP all fail the same way. Commits accumulate locally with no friction; that's all you need to do.
+5. **Open the PR with `gh pr create` at the very end.** This is the sole operation that publishes the branch and the commits in a single step. Do not run Copilot code review or CodeQL locally beforehand — both run automatically as PR checks once the PR exists, and running them mid-task tends to hang on the same missing-origin-branch credentials that block `git push`.
+
+If you are a sub-agent delegated work by an orchestrator: the rules above apply to you regardless of how narrow your brief is. Do not push; do not run pre-PR validation tooling; commit and hand back. See `.github/skills/task-orchestration/SKILL.md` → Finalization protocol for the full rationale.
 
 ## Browser Automation
 

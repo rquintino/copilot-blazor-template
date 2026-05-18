@@ -170,6 +170,7 @@ This task runs cleanly with or without other backlog tasks. Specifically:
 - [ ] `dotnet build` succeeds.
 - [ ] `dotnet test` succeeds.
 - [ ] `dotnet format --verify-no-changes` succeeds.
+- [ ] If UI pages were added or changed: `docs/screenshots.config.json` updated and `bash scripts/demo.sh` regenerated artifacts in `docs/screenshots/` and `docs/demo/`.
 - [ ] <task-specific check>
 
 ## References
@@ -177,6 +178,16 @@ This task runs cleanly with or without other backlog tasks. Specifically:
 ```
 
 Keep TASK.md files short (~50-200 lines). If a task is growing past that, split it.
+
+## Finalization protocol
+
+These rules apply at the **end** of every task, just before moving the folder to `tasks/done/` and opening the PR. They exist because the GitHub Copilot coding-agent environment has constraints that differ from local development; respecting them removes a chunk of wall-time from every run.
+
+1. **Refresh screenshots when UI changed.** If the task added or changed any `.razor` page (or anything that visibly alters an existing page), update `docs/screenshots.config.json` with the new pages and run `bash scripts/demo.sh`. Commit the regenerated `docs/screenshots/*.png` and `docs/demo/*.webm` in the same task commit. The config schema and one-shot are documented in `.github/skills/screenshots-demo/SKILL.md`.
+2. **Commit, do not push.** In the Copilot coding-agent environment, `git push` is blocked at the credential layer — the recent banking-app run wasted turns on `Push changes` → `Try alternative push` → "failing due to credentials". Commits are fine; they accumulate locally. The PR-creation step at the end of the task (`gh pr create`) handles publishing the branch and the commits in a single operation.
+3. **Do not invoke Copilot code review or CodeQL mid-task.** Both run automatically as PR checks once `gh pr create` succeeds. Running them locally before the PR exists tends to hang on missing-origin-branch credentials (same reason `git push` fails), and even on success it duplicates work the PR will redo. Skip them and let the PR pipeline do its job.
+4. **Run the validator skill before the move to `done/`.** Invoke `.github/skills/validator/SKILL.md` and confirm every applicable check passes. If a check fails, the task is not done — fix and re-validate. The validator is read-only; it reports, it does not patch.
+5. **Open the PR last.** `gh pr create` is the publishing step. It is the *only* operation in the task lifecycle that contacts origin. If `gh pr create` fails, do not retry with `git push` — read the gh error, fix the cause, retry `gh pr create`.
 
 ## Anti-patterns
 
@@ -186,6 +197,8 @@ Keep TASK.md files short (~50-200 lines). If a task is growing past that, split 
 - **Pre-creating `tasks/done/` with a `.gitkeep`** — done is for completed work, not scaffolding.
 - **Long-running tasks in `current/`** — if a task sits in `current/` for more than a sprint, demote it back to `backlog/` and document why.
 - **Editing a TASK.md after the task is moved to `done/`** — done is immutable history; create a follow-up task instead.
+- **`git push` during the task.** Blocked in the Copilot coding-agent environment; only `gh pr create` publishes. See Finalization protocol.
+- **Running Copilot code review / CodeQL before the PR exists.** Redundant — they run as PR checks. See Finalization protocol.
 
 ## References
 
