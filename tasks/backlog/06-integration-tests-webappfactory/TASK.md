@@ -4,7 +4,7 @@
 Create a new in-process integration-test project that exercises HTTP-shaped behaviour (auth redirects, antiforgery enforcement, role gating, `returnUrl` handling) via `WebApplicationFactory<Program>` + `HttpClient`, so the E2E browser tests can stay focused on actual rendering and interaction.
 
 ## Scope
-- Create `tests/CopilotBlazorTemplate.IntegrationTests/` with its own csproj.
+- Create `tests/BlazorDemo.IntegrationTests/` with its own csproj.
 - Add a `Program.cs` partial declaration so `WebApplicationFactory<Program>` can resolve it (mirroring the partial pattern the E2ETests project already exploits internally — confirm the existing `Program.cs` works with the factory; if not, add a `public partial class Program { }` shim at the bottom of `Program.cs`).
 - Write ~15-20 tests covering:
   - `GET /dashboard` unauthenticated → 302 to `/Account/Login?returnUrl=…`.
@@ -26,10 +26,10 @@ Out of scope:
 - Migrating to xUnit v3 (task 07).
 
 ## Edit zone
-- `tests/CopilotBlazorTemplate.IntegrationTests/CopilotBlazorTemplate.IntegrationTests.csproj` (new)
-- `tests/CopilotBlazorTemplate.IntegrationTests/**/*.cs` (new)
-- `CopilotBlazorTemplate.slnx` (add the new project under `tests/` — additive XML insert)
-- `src/CopilotBlazorTemplate.Web/Program.cs` (only if a `public partial class Program { }` shim is needed — append at the very bottom of the file, no other edits)
+- `tests/BlazorDemo.IntegrationTests/BlazorDemo.IntegrationTests.csproj` (new)
+- `tests/BlazorDemo.IntegrationTests/**/*.cs` (new)
+- `BlazorDemo.slnx` (add the new project under `tests/` — additive XML insert)
+- `src/BlazorDemo.Web/Program.cs` (only if a `public partial class Program { }` shim is needed — append at the very bottom of the file, no other edits)
 - `Directory.Packages.props` (if it exists — add `<PackageVersion>` entries for `Microsoft.AspNetCore.Mvc.Testing`, `Microsoft.EntityFrameworkCore.Sqlite`)
 
 ## Independence guarantee
@@ -45,7 +45,7 @@ Out of scope:
 This task may sit in `backlog/` for weeks. By the time it is picked up the routes, auth pipeline, and `Program.cs` may have drifted from the snapshot the audit captured. Handle the three drift modes explicitly:
 
 - **File already changed by another task.** Before adding `public partial class Program { }`, grep `Program.cs` for it. Before adding the project to `.slnx`, read the slnx to see whether someone already added it. Before adding a `<PackageVersion>` to `Directory.Packages.props`, check whether it is already present.
-- **File moved/renamed.** Routes asserted by tests (`/dashboard`, `/admin`, `/Account/Login`, `/Account/Logout`) may have moved. Verify each by `grep -rln '@page' src/CopilotBlazorTemplate.Web/` and adjust the test URLs to match. If `appsettings*.json` or `Program.cs` paths have changed (renamed project), locate them via `git ls-files`.
+- **File moved/renamed.** Routes asserted by tests (`/dashboard`, `/admin`, `/Account/Login`, `/Account/Logout`) may have moved. Verify each by `grep -rln '@page' src/BlazorDemo.Web/` and adjust the test URLs to match. If `appsettings*.json` or `Program.cs` paths have changed (renamed project), locate them via `git ls-files`.
 - **Prerequisite work already done.** Quick checks: does an `IntegrationTests` project already exist? Does `Program.cs` already have the partial-class shim? Are security headers already in place (so `HeadersTests` can be un-skipped)? Skip steps whose intent is already in place and note in the PR description.
 
 ### If you find related work already started
@@ -54,10 +54,10 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the route
 - Coordination happens via the PR description and the existing sticky CI comment, not via blocking dependencies between tasks.
 
 ## Steps
-1. **Verify current state first.** Read `src/CopilotBlazorTemplate.Web/Program.cs`, the `.slnx`, and the test routes you plan to assert against (`grep -rln '@page' src/CopilotBlazorTemplate.Web/`). The snippets below describe the *intent* of each test; apply that intent to whatever routes / Identity endpoints / appsettings shape the project actually has today. If the Web project has been renamed, locate it via `git ls-files '*.Web.csproj'`. Skip any sub-step whose intent is already in place; note the skip in the PR description.
-2. `dotnet new xunit -o tests/CopilotBlazorTemplate.IntegrationTests` (skip if the folder already exists; instead add the missing tests inside it). Add a project reference to the Web csproj (locate via `git ls-files '*.Web.csproj'`).
+1. **Verify current state first.** Read `src/BlazorDemo.Web/Program.cs`, the `.slnx`, and the test routes you plan to assert against (`grep -rln '@page' src/BlazorDemo.Web/`). The snippets below describe the *intent* of each test; apply that intent to whatever routes / Identity endpoints / appsettings shape the project actually has today. If the Web project has been renamed, locate it via `git ls-files '*.Web.csproj'`. Skip any sub-step whose intent is already in place; note the skip in the PR description.
+2. `dotnet new xunit -o tests/BlazorDemo.IntegrationTests` (skip if the folder already exists; instead add the missing tests inside it). Add a project reference to the Web csproj (locate via `git ls-files '*.Web.csproj'`).
 3. Add NuGet references: `Microsoft.AspNetCore.Mvc.Testing`, `Microsoft.EntityFrameworkCore.Sqlite`, `Microsoft.Data.Sqlite`, `coverlet.collector`. Match the existing xUnit version used by the other test projects (read their csprojs first).
-4. Add a `Program.cs` shim only if it's not already implicitly available. Grep `Program.cs` for `partial class Program`; if absent, append at the bottom of `src/CopilotBlazorTemplate.Web/Program.cs`:
+4. Add a `Program.cs` shim only if it's not already implicitly available. Grep `Program.cs` for `partial class Program`; if absent, append at the bottom of `src/BlazorDemo.Web/Program.cs`:
    ```csharp
    public partial class Program { } // for WebApplicationFactory<Program>
    ```
@@ -72,15 +72,15 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the route
    - `AntiforgeryTests` — logout without token, logout with token.
    - `OpenRedirectTests` — `?returnUrl=//evil.com`, `?returnUrl=https://evil.com`.
    - `HeadersTests` — `X-Content-Type-Options`, CSP, Referrer-Policy (Skip if task 03 not yet shipped).
-7. Add `tests/CopilotBlazorTemplate.IntegrationTests/xunit.runner.json` (`parallelizeTestCollections: false` — `WebApplicationFactory` is fine across collections but `IClassFixture` per-class is enough).
-8. Update `CopilotBlazorTemplate.slnx` only if the new project is not already listed there:
+7. Add `tests/BlazorDemo.IntegrationTests/xunit.runner.json` (`parallelizeTestCollections: false` — `WebApplicationFactory` is fine across collections but `IClassFixture` per-class is enough).
+8. Update `BlazorDemo.slnx` only if the new project is not already listed there:
    ```xml
    <Folder Name="/tests/">
-     <Project Path="tests/CopilotBlazorTemplate.IntegrationTests/CopilotBlazorTemplate.IntegrationTests.csproj" />
+     <Project Path="tests/BlazorDemo.IntegrationTests/BlazorDemo.IntegrationTests.csproj" />
      <!-- existing Project lines -->
    </Folder>
    ```
-9. Run `dotnet restore` then `dotnet test tests/CopilotBlazorTemplate.IntegrationTests`. Iterate until green.
+9. Run `dotnet restore` then `dotnet test tests/BlazorDemo.IntegrationTests`. Iterate until green.
 10. Verify the whole solution still builds: `dotnet build`.
 
 ## Acceptance criteria

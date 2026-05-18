@@ -37,14 +37,14 @@ jobs:
         id: unit_tests
         continue-on-error: true
         run: |
-          dotnet test tests/CopilotBlazorTemplate.UnitTests/ \
+          dotnet test tests/BlazorDemo.UnitTests/ \
             --configuration Release --no-build --verbosity normal \
             --logger "trx;LogFileName=unit.trx" \
             --results-directory TestResults/unit
 
       - name: Install Playwright Browsers
         run: |
-          cd tests/CopilotBlazorTemplate.E2ETests
+          cd tests/BlazorDemo.E2ETests
           dotnet build
           pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium
 
@@ -52,7 +52,7 @@ jobs:
         id: e2e_tests
         continue-on-error: true
         run: |
-          dotnet test tests/CopilotBlazorTemplate.E2ETests/ \
+          dotnet test tests/BlazorDemo.E2ETests/ \
             --configuration Release --verbosity normal \
             --logger "trx;LogFileName=e2e.trx" \
             --results-directory TestResults/e2e

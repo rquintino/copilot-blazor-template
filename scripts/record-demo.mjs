@@ -3,7 +3,7 @@
  * Demo video recorder for Copilot Blazor Template.
  * 
  * Usage:
- *   1. Start the app: dotnet run --project src/CopilotBlazorTemplate.Web --urls http://localhost:5177
+ *   1. Start the app: dotnet run --project src/BlazorDemo.Web --urls http://localhost:5177
  *   2. Run: node scripts/record-demo.mjs
  * 
  * Prerequisites: npm install playwright (in project or globally)

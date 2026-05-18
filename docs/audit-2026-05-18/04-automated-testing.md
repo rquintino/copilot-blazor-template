@@ -30,9 +30,9 @@ The template ships a credible but minimal two-tier test stack (xUnit unit tests 
 ## Findings
 
 ### [High] No Blazor component tests — middle of the pyramid is empty
-**Where:** `tests/CopilotBlazorTemplate.UnitTests/` (no bUnit reference)
+**Where:** `tests/BlazorDemo.UnitTests/` (no bUnit reference)
 **Current:** Every rendering assertion (sidebar visibility, role-based UI gating, dashboard layout, `NotFound` page, `ReconnectModal`) is exercised only via a full Playwright browser round-trip. Component logic (parameter binding, `EventCallback`, `CascadingParameter`, `@if`/role checks inside markup) has zero direct coverage.
-**Recommended:** Add a third test project `CopilotBlazorTemplate.ComponentTests` (or fold into UnitTests) using **bUnit** (the de-facto Blazor component testing library, actively maintained, .NET 10 compatible). Use `TestContext` + `AddTestAuthorization()` to drive role-aware rendering deterministically and cheaply (<10ms per test).
+**Recommended:** Add a third test project `BlazorDemo.ComponentTests` (or fold into UnitTests) using **bUnit** (the de-facto Blazor component testing library, actively maintained, .NET 10 compatible). Use `TestContext` + `AddTestAuthorization()` to drive role-aware rendering deterministically and cheaply (<10ms per test).
 ```csharp
 using var ctx = new TestContext();
 var authCtx = ctx.AddTestAuthorization();
@@ -52,9 +52,9 @@ cut.Find("nav.sidebar-nav").MarkupMatches(/* expected */);
 **Effort:** S–M (mostly package swap + handful of namespace/signature updates).
 
 ### [High] No `WebApplicationFactory` integration tests despite the package being referenced
-**Where:** `tests/CopilotBlazorTemplate.E2ETests/CopilotBlazorTemplate.E2ETests.csproj` line 12 — `Microsoft.AspNetCore.Mvc.Testing` is referenced but never used. The `PlaywrightFixture` shells out to `dotnet exec` instead.
+**Where:** `tests/BlazorDemo.E2ETests/BlazorDemo.E2ETests.csproj` line 12 — `Microsoft.AspNetCore.Mvc.Testing` is referenced but never used. The `PlaywrightFixture` shells out to `dotnet exec` instead.
 **Current:** All HTTP-level behavior (auth challenge redirects, antiforgery enforcement on the Identity logout form, `ReturnUrl` handling, `[Authorize(Roles="Admin")]` 302/403, route matching, error middleware) is tested only through a browser. Many of these don't need a browser at all.
-**Recommended:** Add `CopilotBlazorTemplate.IntegrationTests` using `WebApplicationFactory<Program>` + `HttpClient` for HTTP-shaped assertions, and keep Playwright for actual rendering/interaction. Example:
+**Recommended:** Add `BlazorDemo.IntegrationTests` using `WebApplicationFactory<Program>` + `HttpClient` for HTTP-shaped assertions, and keep Playwright for actual rendering/interaction. Example:
 ```csharp
 public class AuthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 {
@@ -73,7 +73,7 @@ This also lets you swap `AppDbContext` to in-memory or a Testcontainers SQL Serv
 **Effort:** M (new project, ~15-20 tests).
 
 ### [High] EF Core test coverage is dangerously thin
-**Where:** `tests/CopilotBlazorTemplate.UnitTests/SeedDataTests.cs` (only 3 tests, all on `SeedData`)
+**Where:** `tests/BlazorDemo.UnitTests/SeedDataTests.cs` (only 3 tests, all on `SeedData`)
 **Current:**
 - `AppDbContext` configuration (entity mappings, indexes, `ApplicationUser.DisplayName` column constraints) is never asserted.
 - The single Identity migration `20260518120430_InitialCreate` has no apply/round-trip test.
@@ -87,7 +87,7 @@ This also lets you swap `AppDbContext` to in-memory or a Testcontainers SQL Serv
 **Effort:** S (per item).
 
 ### [Med] Playwright tests have no trace/video/screenshot-on-failure
-**Where:** `tests/CopilotBlazorTemplate.E2ETests/PlaywrightFixture.cs`
+**Where:** `tests/BlazorDemo.E2ETests/PlaywrightFixture.cs`
 **Current:** `NewContextAsync` does not configure `RecordVideoDir`, `RecordHarPath`, or `Tracing.StartAsync`. When a CI run fails, the only artifact is the TRX message — debugging requires re-running locally.
 **Recommended:** Wrap each test in a base helper or extend the fixture to start a trace per context and persist on failure:
 ```csharp
@@ -118,7 +118,7 @@ Upload `TestResults/traces/` as a CI artifact. xUnit v3 makes `TestContext.Curre
 **Effort:** S.
 
 ### [Med] `xunit.runner.json` only present in E2E, not Unit project
-**Where:** `tests/CopilotBlazorTemplate.E2ETests/xunit.runner.json` exists; UnitTests has none.
+**Where:** `tests/BlazorDemo.E2ETests/xunit.runner.json` exists; UnitTests has none.
 **Current:** E2E caps `maxParallelThreads: 4` (sensible — shared singleton). UnitTests inherits defaults (fully parallel across collections, threads = CPU count) — fine, but undocumented and inconsistent.
 **Recommended:** Add an explicit `xunit.runner.json` to UnitTests with `parallelizeAssembly: true`, `parallelizeTestCollections: true`, leave `maxParallelThreads: 0` (unbounded). Makes intent explicit.
 **Why:** Clarity + reproducibility across machines. Templates teach by example.

@@ -17,11 +17,11 @@ Run these in order. **Stop at the first failure** and report it; do not attempt 
 1. **Build is green.**
    `dotnet build` → 0 errors. Capture warning count.
 2. **Unit tests pass.**
-   `dotnet test tests/CopilotBlazorTemplate.UnitTests/` → all green.
-3. **EF migration applies cleanly.** Only if `src/CopilotBlazorTemplate.Core/Migrations/` was touched in this task.
-   - Delete `src/CopilotBlazorTemplate.Web/Data/app.db` if it exists.
-   - `dotnet ef database update --project src/CopilotBlazorTemplate.Core --startup-project src/CopilotBlazorTemplate.Web` → success.
-4. **App boots and serves authenticated + unauthenticated routes.** Only if `src/CopilotBlazorTemplate.Web/` was touched.
+   `dotnet test tests/BlazorDemo.UnitTests/` → all green.
+3. **EF migration applies cleanly.** Only if `src/BlazorDemo.Core/Migrations/` was touched in this task.
+   - Delete `src/BlazorDemo.Web/Data/app.db` if it exists.
+   - `dotnet ef database update --project src/BlazorDemo.Core --startup-project src/BlazorDemo.Web` → success.
+4. **App boots and serves authenticated + unauthenticated routes.** Only if `src/BlazorDemo.Web/` was touched.
    - Start the app on `:5177` (same flags as `scripts/demo.sh`).
    - Wait up to 90s for `curl -sf http://localhost:5177/` to return 200.
    - Verify `/` and `/Account/Login` both return 200.

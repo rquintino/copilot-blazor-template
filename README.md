@@ -8,10 +8,10 @@ A minimal, agent-ready Blazor Web App starter with authentication, designed for 
 
 | Project | Purpose |
 |---------|---------|
-| `CopilotBlazorTemplate.Web` | Blazor Server app with Identity auth and UI |
-| `CopilotBlazorTemplate.Core` | Domain entities, EF Core DbContext, data layer |
-| `CopilotBlazorTemplate.UnitTests` | xUnit unit tests |
-| `CopilotBlazorTemplate.E2ETests` | Playwright end-to-end tests |
+| `BlazorDemo.Web` | Blazor Server app with Identity auth and UI |
+| `BlazorDemo.Core` | Domain entities, EF Core DbContext, data layer |
+| `BlazorDemo.UnitTests` | xUnit unit tests |
+| `BlazorDemo.E2ETests` | Playwright end-to-end tests |
 
 ## Quick Start
 
@@ -19,7 +19,7 @@ A minimal, agent-ready Blazor Web App starter with authentication, designed for 
 # Clone and run
 git clone https://github.com/rquintino/copilot-blazor-template.git
 cd copilot-blazor-template
-dotnet run --project src/CopilotBlazorTemplate.Web
+dotnet run --project src/BlazorDemo.Web
 ```
 
 Open https://localhost:5001 (or the URL shown in console).
@@ -56,8 +56,8 @@ Open https://localhost:5001 (or the URL shown in console).
 ## How to Use This Template
 
 1. **Fork** this repository
-2. **Add entities** to `src/CopilotBlazorTemplate.Core/Entities/`
-3. **Add pages** to `src/CopilotBlazorTemplate.Web/Components/Pages/`
+2. **Add entities** to `src/BlazorDemo.Core/Entities/`
+3. **Add pages** to `src/BlazorDemo.Web/Components/Pages/`
 4. **Prompt Copilot** — the agent instructions and AGENTS.md guide AI assistance
 
 ## Tech Stack

@@ -9,7 +9,7 @@ Harden the GitHub Actions surface: pin every action to a commit SHA, add `github
 - Add `.github/workflows/codeql.yml` (GitHub-provided starter for `csharp` + `javascript`).
 - Add a `dotnet format --verify-no-changes --no-restore` step to `ci.yml` (run after restore, before tests so failures surface fast).
 - Add `--collect:"XPlat Code Coverage"` to the `dotnet test` calls, install ReportGenerator as a local tool (`.config/dotnet-tools.json`), generate a Cobertura summary, upload as artifact, and extend `.github/scripts/build_test_summary.py` to inject a coverage line into the sticky `<!-- ci-test-summary -->` comment.
-- Split `ci.yml` into two jobs: `unit-tests` (UnitTests + IntegrationTests if task 06 has shipped) and `e2e-tests` (Playwright). Cache `~/.cache/ms-playwright` keyed on the Playwright version pulled from `tests/CopilotBlazorTemplate.E2ETests/CopilotBlazorTemplate.E2ETests.csproj`. Cache `~/.nuget/packages` keyed on lockfile hashes.
+- Split `ci.yml` into two jobs: `unit-tests` (UnitTests + IntegrationTests if task 06 has shipped) and `e2e-tests` (Playwright). Cache `~/.cache/ms-playwright` keyed on the Playwright version pulled from `tests/BlazorDemo.E2ETests/BlazorDemo.E2ETests.csproj`. Cache `~/.nuget/packages` keyed on lockfile hashes.
 - Add `--locked-mode` to the CI `dotnet restore` step (depends on task 02 having committed lockfiles).
 
 Out of scope:
@@ -27,7 +27,7 @@ Out of scope:
 ## Independence guarantee
 - This task is the canonical owner of `.github/workflows/ci.yml`. Task 09 owns `copilot-setup-steps.yml`. No overlap.
 - If task 02 (lockfiles committed) has not shipped, the `--locked-mode` flag will fail CI. Wrap the lockfile-mode change behind a conditional check (or skip the `--locked-mode` flag and leave a TODO) so this task can still ship before task 02. Once task 02 lands, a follow-up adds `--locked-mode`.
-- If task 06 (IntegrationTests) has not shipped, the `unit-tests` job runs only `CopilotBlazorTemplate.UnitTests`. Once task 06 lands, the job picks up the new project automatically via a `dotnet test` solution-wide call or a `--filter` that excludes `E2ETests`.
+- If task 06 (IntegrationTests) has not shipped, the `unit-tests` job runs only `BlazorDemo.UnitTests`. Once task 06 lands, the job picks up the new project automatically via a `dotnet test` solution-wide call or a `--filter` that excludes `E2ETests`.
 - If task 07 has not yet enabled trace-on-failure or migrated to xUnit v3, the `e2e-tests` job still works — only the artifact-upload step is conditional on `TestResults/traces/` existing.
 - Dependabot's new `github-actions` ecosystem will start opening PRs after merge; those PRs will keep the SHAs current.
 - CodeQL is a separate workflow file; it does not touch `ci.yml` and runs on its own schedule.
@@ -85,7 +85,7 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the workf
            with: { dotnet-version: '10.x', cache: true, cache-dependency-path: '**/packages.lock.json' }
          - run: dotnet restore --locked-mode      # only after task 02 lands
          - run: dotnet format --verify-no-changes --no-restore
-         - run: dotnet test tests/CopilotBlazorTemplate.UnitTests --no-restore --collect:"XPlat Code Coverage" --results-directory TestResults
+         - run: dotnet test tests/BlazorDemo.UnitTests --no-restore --collect:"XPlat Code Coverage" --results-directory TestResults
          # if task 06 has shipped, also test IntegrationTests
          - run: dotnet tool restore
          - run: dotnet reportgenerator -reports:TestResults/**/coverage.cobertura.xml -targetdir:TestResults/coverage -reporttypes:"Html;TextSummary;MarkdownSummary"
@@ -101,16 +101,16 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the workf
          - uses: actions/setup-node@<sha>
            with: { node-version: '22', cache: 'npm' }
          - run: dotnet restore --locked-mode
-         - run: dotnet build --no-restore tests/CopilotBlazorTemplate.E2ETests
+         - run: dotnet build --no-restore tests/BlazorDemo.E2ETests
          - id: pw
-           run: echo "version=$(grep -oP 'Microsoft\.Playwright"\s+Version="\K[^"]+' tests/CopilotBlazorTemplate.E2ETests/CopilotBlazorTemplate.E2ETests.csproj)" >> $GITHUB_OUTPUT
+           run: echo "version=$(grep -oP 'Microsoft\.Playwright"\s+Version="\K[^"]+' tests/BlazorDemo.E2ETests/BlazorDemo.E2ETests.csproj)" >> $GITHUB_OUTPUT
          - uses: actions/cache@<sha>
            with: { path: ~/.cache/ms-playwright, key: pw-${{ steps.pw.outputs.version }} }
-         - run: pwsh tests/CopilotBlazorTemplate.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
-         - run: dotnet test tests/CopilotBlazorTemplate.E2ETests --no-build --logger trx
+         - run: pwsh tests/BlazorDemo.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+         - run: dotnet test tests/BlazorDemo.E2ETests --no-build --logger trx
          - uses: actions/upload-artifact@<sha>
            if: always()
-           with: { name: e2e-traces, path: tests/CopilotBlazorTemplate.E2ETests/TestResults/traces, if-no-files-found: ignore }
+           with: { name: e2e-traces, path: tests/BlazorDemo.E2ETests/TestResults/traces, if-no-files-found: ignore }
 
      summary:
        needs: [unit-tests, e2e-tests]

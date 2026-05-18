@@ -7,7 +7,7 @@ Make the existing Playwright suite production-grade: trace-on-failure with CI ar
 - Enable `Tracing.StartAsync` per `IBrowserContext` in `PlaywrightFixture` (Screenshots + Snapshots + Sources), stop the trace on failure and persist to `TestResults/traces/`.
 - Add a one-retry policy for E2E tests (via `Xunit.RetryFact` community attribute on the most flake-prone classes, or by migrating to xUnit v3 which has first-class retry).
 - Pick an assertion library — recommend **Shouldly** for the .NET 10 era (lightweight, open-source, good failure messages). Add to both test projects' `Directory.Packages.props` entry. Rewrite **one** existing test to demonstrate the pattern; document the convention in `tests/AGENTS.md` (new).
-- Add `xunit.runner.json` to `CopilotBlazorTemplate.UnitTests` if task 05 has not already shipped it.
+- Add `xunit.runner.json` to `BlazorDemo.UnitTests` if task 05 has not already shipped it.
 - Replace `UseInMemoryDatabase` in `SeedDataTests` with SQLite in-memory (`new SqliteConnection("DataSource=:memory:")` + `UseSqlite`). Add a new migration-smoke test that applies all migrations to a fresh SQLite DB and asserts the schema matches `AppDbContextModelSnapshot`.
 - Add `Deque.AxeCore.Playwright`. Add four a11y smoke tests (`/`, `/Account/Login`, `/dashboard`, `/admin`) failing on `serious`/`critical` violations.
 - Plan and execute the xUnit v2 → v3 migration in both test projects (`xunit` → `xunit.v3`, `xunit.runner.visualstudio` → `xunit.v3.runner.visualstudio`). Update any `IAsyncLifetime` signatures.
@@ -19,14 +19,14 @@ Out of scope:
 - Rewriting the Playwright skill + instruction docs (owned by task 09).
 
 ## Edit zone
-- `tests/CopilotBlazorTemplate.E2ETests/PlaywrightFixture.cs`
-- `tests/CopilotBlazorTemplate.E2ETests/*.cs` (one test rewritten to Shouldly; a11y tests added)
-- `tests/CopilotBlazorTemplate.E2ETests/CopilotBlazorTemplate.E2ETests.csproj` (add packages)
-- `tests/CopilotBlazorTemplate.E2ETests/xunit.runner.json` (already exists — additive `methodDisplay` / `methodDisplayOptions` if needed)
-- `tests/CopilotBlazorTemplate.UnitTests/CopilotBlazorTemplate.UnitTests.csproj` (add packages)
-- `tests/CopilotBlazorTemplate.UnitTests/SeedDataTests.cs`
-- `tests/CopilotBlazorTemplate.UnitTests/MigrationSmokeTests.cs` (new)
-- `tests/CopilotBlazorTemplate.UnitTests/xunit.runner.json` (new, if task 05 has not shipped it)
+- `tests/BlazorDemo.E2ETests/PlaywrightFixture.cs`
+- `tests/BlazorDemo.E2ETests/*.cs` (one test rewritten to Shouldly; a11y tests added)
+- `tests/BlazorDemo.E2ETests/BlazorDemo.E2ETests.csproj` (add packages)
+- `tests/BlazorDemo.E2ETests/xunit.runner.json` (already exists — additive `methodDisplay` / `methodDisplayOptions` if needed)
+- `tests/BlazorDemo.UnitTests/BlazorDemo.UnitTests.csproj` (add packages)
+- `tests/BlazorDemo.UnitTests/SeedDataTests.cs`
+- `tests/BlazorDemo.UnitTests/MigrationSmokeTests.cs` (new)
+- `tests/BlazorDemo.UnitTests/xunit.runner.json` (new, if task 05 has not shipped it)
 - `tests/AGENTS.md` (new — short doc for the convention)
 - `Directory.Packages.props` (if it exists — add `Shouldly`, `Deque.AxeCore.Playwright`, `Microsoft.EntityFrameworkCore.Sqlite`, `xunit.v3*`)
 
@@ -42,7 +42,7 @@ Out of scope:
 This task may sit in `backlog/` for weeks. By the time it is picked up the test infrastructure may have drifted from the snapshot the audit captured. Handle the three drift modes explicitly:
 
 - **File already changed by another task.** Before editing `PlaywrightFixture.cs`, `SeedDataTests.cs`, or the csprojs, read them. Tracing may already be enabled; `xunit.runner.json` may exist; SQLite may already be in use. Add only what's missing.
-- **File moved/renamed.** Tests may have been reorganised. Locate `PlaywrightFixture` by symbol (`grep -rln 'class PlaywrightFixture' tests/`); locate `SeedDataTests` similarly. If the project layout changed (e.g. `tests/CopilotBlazorTemplate.E2ETests/` renamed), use the actual paths.
+- **File moved/renamed.** Tests may have been reorganised. Locate `PlaywrightFixture` by symbol (`grep -rln 'class PlaywrightFixture' tests/`); locate `SeedDataTests` similarly. If the project layout changed (e.g. `tests/BlazorDemo.E2ETests/` renamed), use the actual paths.
 - **Prerequisite work already done.** Quick checks: does `Shouldly` already appear in any csproj? Are there already a11y tests under E2E? Is the project on `xunit.v3` already? Skip whatever is in place; note in the PR description.
 
 ### If you find related work already started
@@ -71,7 +71,7 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the test 
    ```
 6. **`MigrationSmokeTests.cs`:** one test that applies all migrations and asserts `ctx.Database.GenerateCreateScript()` is non-empty and contains the expected `AspNetUsers` / `DisplayName` columns (read the actual current schema first — column names are the source of truth, not this snippet).
 7. **`xunit.runner.json` (UnitTests):** add only if not already present. Use the same shape as the E2E project's `xunit.runner.json` for consistency, but with `maxParallelThreads: 0` (unbounded — there is no shared singleton to protect).
-8. **A11y tests:** add `tests/CopilotBlazorTemplate.E2ETests/AccessibilityTests.cs` (skip if a similarly-scoped test already exists):
+8. **A11y tests:** add `tests/BlazorDemo.E2ETests/AccessibilityTests.cs` (skip if a similarly-scoped test already exists):
    ```csharp
    [Fact]
    public async Task Login_Has_No_Serious_Or_Critical_A11y_Violations()

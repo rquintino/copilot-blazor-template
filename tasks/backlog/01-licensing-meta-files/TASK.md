@@ -55,7 +55,7 @@ This task may sit in `backlog/` for weeks. By the time it is picked up, the surr
    - Branch model (PRs against `main`).
    - Commit-message style (Conventional Commits — the repo already uses `fix:`, `perf:`, `feat:` prefixes).
    - Required pre-commit checks: `dotnet build`, `dotnet test`, `dotnet format --verify-no-changes`.
-   - How to run E2E tests locally (`pwsh tests/CopilotBlazorTemplate.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium` then `dotnet test`).
+   - How to run E2E tests locally (`pwsh tests/BlazorDemo.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium` then `dotnet test`).
    - How to update lockfiles when adding a NuGet package.
 6. Write `.github/PULL_REQUEST_TEMPLATE.md` with sections: **Summary**, **Changes**, **Checklist** (build green, tests added/updated, `dotnet format` applied, docs updated if user-facing, screenshots for UI changes).
 7. Write `.github/CODEOWNERS` with a single line: `* @<repo-owner>` (replace `<repo-owner>` with the actual GitHub login; default to the value of `git config user.name` or the org name in the repo URL).

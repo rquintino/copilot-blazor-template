@@ -4,11 +4,11 @@
 
 ```
 ├── src/
-│   ├── CopilotBlazorTemplate.Web/     # Blazor Web App (UI + Identity)
-│   └── CopilotBlazorTemplate.Core/    # Domain entities, DbContext, data layer
+│   ├── BlazorDemo.Web/     # Blazor Web App (UI + Identity)
+│   └── BlazorDemo.Core/    # Domain entities, DbContext, data layer
 ├── tests/
-│   ├── CopilotBlazorTemplate.UnitTests/   # xUnit unit tests
-│   └── CopilotBlazorTemplate.E2ETests/    # Playwright E2E tests
+│   ├── BlazorDemo.UnitTests/   # xUnit unit tests
+│   └── BlazorDemo.E2ETests/    # Playwright E2E tests
 ├── docs/                               # Screenshots, demo
 ├── scripts/                            # Dev setup scripts
 └── .github/                            # Workflows, instructions, agents
@@ -19,13 +19,13 @@
 | Action | Command |
 |--------|---------|
 | Build | `dotnet build` |
-| Test (unit) | `dotnet test tests/CopilotBlazorTemplate.UnitTests/` |
-| Test (E2E) | `dotnet test tests/CopilotBlazorTemplate.E2ETests/` |
+| Test (unit) | `dotnet test tests/BlazorDemo.UnitTests/` |
+| Test (E2E) | `dotnet test tests/BlazorDemo.E2ETests/` |
 | Test (all) | `dotnet test` |
-| Run | `dotnet run --project src/CopilotBlazorTemplate.Web` |
+| Run | `dotnet run --project src/BlazorDemo.Web` |
 | Format | `dotnet format` |
-| EF Migration | `dotnet ef migrations add <Name> --project src/CopilotBlazorTemplate.Core --startup-project src/CopilotBlazorTemplate.Web` |
-| EF Update DB | `dotnet ef database update --project src/CopilotBlazorTemplate.Core --startup-project src/CopilotBlazorTemplate.Web` |
+| EF Migration | `dotnet ef migrations add <Name> --project src/BlazorDemo.Core --startup-project src/BlazorDemo.Web` |
+| EF Update DB | `dotnet ef database update --project src/BlazorDemo.Core --startup-project src/BlazorDemo.Web` |
 
 ## Seeded Credentials
 
@@ -46,8 +46,8 @@
 
 ## How to Extend
 
-1. **Add entities**: Create in `src/CopilotBlazorTemplate.Core/Entities/`, add DbSet to `AppDbContext`
-2. **Add pages**: Create `.razor` files in `src/CopilotBlazorTemplate.Web/Components/Pages/`
+1. **Add entities**: Create in `src/BlazorDemo.Core/Entities/`, add DbSet to `AppDbContext`
+2. **Add pages**: Create `.razor` files in `src/BlazorDemo.Web/Components/Pages/`
 3. **Add services**: Register in `Program.cs`, implement in Core project
 4. **Add migrations**: Run EF migration command above after model changes
 
@@ -64,4 +64,4 @@ If you are a sub-agent delegated work by an orchestrator: the rules above apply 
 ## Browser Automation
 
 - **Ad-hoc browser interaction** (debugging, exploring pages, screenshots): use the **Playwright MCP** server. It is auto-configured for the Copilot cloud agent and scoped to `localhost`/`127.0.0.1` by default. Do not install or invoke the standalone Playwright JS CLI.
-- **E2E tests**: use `Microsoft.Playwright` (NuGet) inside `tests/CopilotBlazorTemplate.E2ETests/`. Browsers install via `pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium` after `dotnet build`.
+- **E2E tests**: use `Microsoft.Playwright` (NuGet) inside `tests/BlazorDemo.E2ETests/`. Browsers install via `pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium` after `dotnet build`.

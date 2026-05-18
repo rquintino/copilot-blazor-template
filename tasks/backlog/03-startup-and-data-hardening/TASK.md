@@ -21,13 +21,13 @@ Out of scope:
 - Component-level `ErrorBoundary` / `[StreamRendering]` / per-page `@rendermode` (owned by task 04).
 
 ## Edit zone
-- `src/CopilotBlazorTemplate.Web/Program.cs`
-- `src/CopilotBlazorTemplate.Web/Components/Account/Pages/Login.razor`
-- `src/CopilotBlazorTemplate.Web/Components/Pages/Admin.razor`
-- `src/CopilotBlazorTemplate.Web/Components/Account/Pages/Manage/ChangePassword.razor` (update `[StringLength]` MinimumLength to 12 to match)
-- `src/CopilotBlazorTemplate.Web/SecurityHeadersMiddleware.cs` (new — small middleware class) **or** inline `app.Use(…)` in `Program.cs`
-- `src/CopilotBlazorTemplate.Web/appsettings.json` (add a `Database:AutoMigrate` key, default `false`)
-- `src/CopilotBlazorTemplate.Web/appsettings.Development.json` (add `Database:AutoMigrate = true`)
+- `src/BlazorDemo.Web/Program.cs`
+- `src/BlazorDemo.Web/Components/Account/Pages/Login.razor`
+- `src/BlazorDemo.Web/Components/Pages/Admin.razor`
+- `src/BlazorDemo.Web/Components/Account/Pages/Manage/ChangePassword.razor` (update `[StringLength]` MinimumLength to 12 to match)
+- `src/BlazorDemo.Web/SecurityHeadersMiddleware.cs` (new — small middleware class) **or** inline `app.Use(…)` in `Program.cs`
+- `src/BlazorDemo.Web/appsettings.json` (add a `Database:AutoMigrate` key, default `false`)
+- `src/BlazorDemo.Web/appsettings.Development.json` (add `Database:AutoMigrate = true`)
 
 ## Independence guarantee
 - This task is the canonical owner of `Program.cs` and `Admin.razor` for this cycle. Other tasks should not modify these files; if they must, they append (a new middleware registration after the security-headers middleware, a new component on the Admin page).
@@ -131,7 +131,7 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the repo 
    }
    ```
    Add `"Database": { "AutoMigrate": false }` to `appsettings.json` and `"Database": { "AutoMigrate": true }` to `appsettings.Development.json`.
-4. **Security-headers middleware:** if a security-headers middleware already exists somewhere under `src/CopilotBlazorTemplate.Web/`, additively extend it with any missing headers. Otherwise create `SecurityHeadersMiddleware.cs` (or inline an `app.Use(...)` in `Program.cs`):
+4. **Security-headers middleware:** if a security-headers middleware already exists somewhere under `src/BlazorDemo.Web/`, additively extend it with any missing headers. Otherwise create `SecurityHeadersMiddleware.cs` (or inline an `app.Use(...)` in `Program.cs`):
    ```csharp
    internal static class SecurityHeadersMiddleware
    {

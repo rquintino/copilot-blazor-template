@@ -33,7 +33,7 @@ Verdict: **good template scaffolding, NOT production-ready as-is**. Roughly 4-6 
 
 ### [Severity: High] Demo credentials hardcoded and seeded on every startup
 
-**Where:** `src/CopilotBlazorTemplate.Core/Data/SeedData.cs:25-50`, displayed on `Components/Account/Pages/Login.razor:44-48`
+**Where:** `src/BlazorDemo.Core/Data/SeedData.cs:25-50`, displayed on `Components/Account/Pages/Login.razor:44-48`
 **Current:** `admin@template.local / Admin123!` and `user@template.local / User123!` are unconditionally created on every app boot, with `EmailConfirmed = true`, in any environment (Production included). The Login page renders the credentials verbatim in HTML.
 **Recommended:**
 1. Gate `SeedData.InitializeAsync` behind `app.Environment.IsDevelopment()` or an explicit `Seed:Enabled` config flag.
@@ -45,7 +45,7 @@ Verdict: **good template scaffolding, NOT production-ready as-is**. Roughly 4-6 
 
 ### [Severity: High] No account lockout on failed password attempts
 
-**Where:** `src/CopilotBlazorTemplate.Web/Components/Account/Pages/Login.razor:101`
+**Where:** `src/BlazorDemo.Web/Components/Account/Pages/Login.razor:101`
 **Current:** `await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);`
 **Recommended:** Set `lockoutOnFailure: true`, and configure the Identity options explicitly:
 ```csharp
@@ -62,7 +62,7 @@ Combine with an IP-level rate limiter (`AddRateLimiter` with a fixed-window poli
 
 ### [Severity: High] Default Identity password policy is too weak
 
-**Where:** `src/CopilotBlazorTemplate.Web/Program.cs:25-30` — only `RequireConfirmedAccount` is configured; `IdentityOptions.Password` is left at defaults (6 chars, requires digit/lowercase/uppercase/non-alphanumeric — but length is the weakest knob). Reinforced by `ChangePassword.razor:99` which validates min length 6.
+**Where:** `src/BlazorDemo.Web/Program.cs:25-30` — only `RequireConfirmedAccount` is configured; `IdentityOptions.Password` is left at defaults (6 chars, requires digit/lowercase/uppercase/non-alphanumeric — but length is the weakest knob). Reinforced by `ChangePassword.razor:99` which validates min length 6.
 **Current:** Effectively a 6-char minimum.
 **Recommended:** Configure to NIST SP 800-63B aligned policy:
 ```csharp
@@ -77,7 +77,7 @@ Update the validation attribute on `ChangePassword.InputModel.NewPassword` to ma
 
 ### [Severity: High] No security response headers (CSP, Permissions-Policy, etc.)
 
-**Where:** `src/CopilotBlazorTemplate.Web/Program.cs` (entire pipeline)
+**Where:** `src/BlazorDemo.Web/Program.cs` (entire pipeline)
 **Current:** No middleware adds Content-Security-Policy, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, or X-Frame-Options. Blazor Web App framework adds none by default.
 **Recommended:** Add a small headers middleware (or `NetEscapades.AspNetCore.SecurityHeaders`) registered before `UseAntiforgery`:
 ```csharp
@@ -99,7 +99,7 @@ Iterate the CSP with nonce-based `script-src` once the team is ready (Blazor's b
 
 ### [Severity: High] No DoS / circuit limits configured for Blazor Server
 
-**Where:** `src/CopilotBlazorTemplate.Web/Program.cs:12-13`
+**Where:** `src/BlazorDemo.Web/Program.cs:12-13`
 **Current:** `AddInteractiveServerComponents()` is called with no `CircuitOptions` or `HubOptions` overrides. Defaults allow large messages and long disconnected-circuit retention.
 **Recommended:**
 ```csharp
@@ -125,7 +125,7 @@ Also enable ASP.NET Core rate limiting (`builder.Services.AddRateLimiter(...)`, 
 
 ### [Severity: Med] Application cookie not explicitly hardened
 
-**Where:** `src/CopilotBlazorTemplate.Web/Program.cs:32-35`
+**Where:** `src/BlazorDemo.Web/Program.cs:32-35`
 **Current:** Only `LoginPath` is set; everything else inherits Identity defaults.
 **Recommended:** Pin the security-relevant knobs explicitly so they cannot drift:
 ```csharp
@@ -159,7 +159,7 @@ The Identity defaults are mostly correct in .NET 10, but pinning protects agains
 
 ### [Severity: Med] EF Core `Migrate()` runs at startup in every environment
 
-**Where:** `src/CopilotBlazorTemplate.Web/Program.cs:44-46`
+**Where:** `src/BlazorDemo.Web/Program.cs:44-46`
 **Current:**
 ```csharp
 using (var scope = app.Services.CreateScope())
@@ -216,7 +216,7 @@ GitHub also offers free secret scanning + push protection on public repos — en
 
 ### [Severity: Med] No `FallbackPolicy` / default-deny authorization
 
-**Where:** `src/CopilotBlazorTemplate.Web/Program.cs` (no `AddAuthorizationBuilder` call)
+**Where:** `src/BlazorDemo.Web/Program.cs` (no `AddAuthorizationBuilder` call)
 **Current:** Authorization is per-page (`[Authorize]` on Dashboard and Admin). Any future page that forgets the attribute is anonymous-by-default.
 **Recommended:**
 ```csharp
@@ -232,7 +232,7 @@ Also prefer policy-based authorization for roles long-term (`.RequireRole("Admin
 
 ### [Severity: Low] `IdentityRedirectManager.RedirectTo` open-redirect guard is permissive
 
-**Where:** `src/CopilotBlazorTemplate.Web/Components/Account/IdentityRedirectManager.cs:19-30`
+**Where:** `src/BlazorDemo.Web/Components/Account/IdentityRedirectManager.cs:19-30`
 **Current:** Only checks `Uri.IsWellFormedUriString(uri, UriKind.Relative)`. A protocol-relative URL like `//evil.com/path` is treated as relative by .NET URI parsing in some cases, and the subsequent `ToBaseRelativePath` would only neutralize it if the input parses as absolute.
 **Recommended:** Add an explicit guard:
 ```csharp
@@ -248,7 +248,7 @@ Or, more cleanly, use `Url.IsLocalUrl(uri)` (MVC helper) / mirror its logic.
 
 ### [Severity: Low] `RedirectToLogin` builds returnUrl from full URI without sanitization
 
-**Where:** `src/CopilotBlazorTemplate.Web/Components/Account/Shared/RedirectToLogin.razor:6`
+**Where:** `src/BlazorDemo.Web/Components/Account/Shared/RedirectToLogin.razor:6`
 **Current:** `NavigationManager.NavigateTo($"Account/Login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}", forceLoad: true);` — passes the *absolute* current URI as `returnUrl`. The Login page then hands it to `RedirectManager.RedirectTo` which has the (weak) open-redirect guard above.
 **Recommended:** Use `NavigationManager.ToBaseRelativePath(NavigationManager.Uri)` so only the path+query is sent.
 **Why:** Tightens the open-redirect attack surface and produces cleaner login URLs.
@@ -267,7 +267,7 @@ Or, more cleanly, use `Url.IsLocalUrl(uri)` (MVC helper) / mirror its logic.
 
 ### [Severity: Low] `Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore` referenced in Web project
 
-**Where:** `src/CopilotBlazorTemplate.Web/CopilotBlazorTemplate.Web.csproj:12`, used at `Program.cs:23` (`AddDatabaseDeveloperPageExceptionFilter`) and `Program.cs:52` (`UseMigrationsEndPoint`).
+**Where:** `src/BlazorDemo.Web/BlazorDemo.Web.csproj:12`, used at `Program.cs:23` (`AddDatabaseDeveloperPageExceptionFilter`) and `Program.cs:52` (`UseMigrationsEndPoint`).
 **Current:** Both calls are inside `if (app.Environment.IsDevelopment())` — that's correct. However `AddDatabaseDeveloperPageExceptionFilter()` is registered unconditionally on line 23. The filter only *activates* under Development per its implementation, so this is fine in practice, but the package ships diagnostics endpoints whose UI leaks schema info if env is misconfigured.
 **Recommended:** Move both the `AddDatabaseDeveloperPageExceptionFilter` registration *and* package reference behind a Development-only compile/runtime guard, or accept the risk and add a comment. Optionally `<PackageReference ... Condition="'$(Configuration)' == 'Debug'">`.
 **Why:** Prevents accidental disclosure if `ASPNETCORE_ENVIRONMENT` is wrong in prod.
@@ -291,7 +291,7 @@ Or, more cleanly, use `Url.IsLocalUrl(uri)` (MVC helper) / mirror its logic.
 
 ### [Severity: Low] `BlazorDisableThrowNavigationException` is set — confirm intent
 
-**Where:** `src/CopilotBlazorTemplate.Web/CopilotBlazorTemplate.Web.csproj:8`
+**Where:** `src/BlazorDemo.Web/BlazorDemo.Web.csproj:8`
 **Current:** `<BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>`
 **Recommended:** Not a security finding per se, but verify the redirect-as-exception pattern isn't being relied on for control flow in any auth code path. The `IdentityRedirectManager` uses `NavigateTo` and that's fine. Document the setting.
 **Why:** Future maintainers may write `NavigateTo("/login")` expecting it to short-circuit execution; with this setting it does *not*, which can let post-redirect code run and leak data or perform unintended writes.

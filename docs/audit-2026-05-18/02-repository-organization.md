@@ -1,7 +1,7 @@
 # Repository Organization Audit
 
 ## Summary
-The repo follows the modern src/ + tests/ layout, uses the new `.slnx` solution format, and has a small, clean project graph (Web -> Core, two test projects). Solid bones for a 2026-era .NET 10 Blazor template. However, several "table-stakes" files for a public template are missing (LICENSE, CONTRIBUTING, SECURITY, .editorconfig, .gitattributes, issue/PR templates), `Directory.Packages.props` (Central Package Management) is not adopted despite five `PackageReference` entries duplicating version `10.0.8` across four csproj files, and `packages.lock.json` is contradictorily both generated (`RestorePackagesWithLockFile=true`) and gitignored. The `tasks/` directory is essentially empty in source control (one `.gitkeep`) with no documented workflow, and `docs/` is screenshots-only with no architecture/ADR/runbook content. Template-scrub story is undefined: `CopilotBlazorTemplate` is hard-coded into ~50 files plus a `UserSecretsId` GUID and a real GitHub badge URL.
+The repo follows the modern src/ + tests/ layout, uses the new `.slnx` solution format, and has a small, clean project graph (Web -> Core, two test projects). Solid bones for a 2026-era .NET 10 Blazor template. However, several "table-stakes" files for a public template are missing (LICENSE, CONTRIBUTING, SECURITY, .editorconfig, .gitattributes, issue/PR templates), `Directory.Packages.props` (Central Package Management) is not adopted despite five `PackageReference` entries duplicating version `10.0.8` across four csproj files, and `packages.lock.json` is contradictorily both generated (`RestorePackagesWithLockFile=true`) and gitignored. The `tasks/` directory is essentially empty in source control (one `.gitkeep`) with no documented workflow, and `docs/` is screenshots-only with no architecture/ADR/runbook content. Template-scrub story is undefined: `BlazorDemo` is hard-coded into ~50 files plus a `UserSecretsId` GUID and a real GitHub badge URL.
 
 ## Strengths
 - Clean `src/` vs `tests/` separation with matching `.slnx` solution folders.
@@ -82,9 +82,9 @@ The repo follows the modern src/ + tests/ layout, uses the new `.slnx` solution 
 **Effort:** M
 
 ### [Med] Template-scrub story is undefined
-**Where:** ~50 files reference `CopilotBlazorTemplate`; `src/CopilotBlazorTemplate.Web/CopilotBlazorTemplate.Web.csproj` line 7 hard-codes `UserSecretsId=aspnet-CopilotBlazorTemplate_Web-962658d4-5019-4545-bd46-e76e0b54d305`; README has hard-coded `github.com/rquintino/copilot-blazor-template` badge URL; AGENTS.md and SeedData embed `@template.local` defaults (acceptable, but undocumented).
+**Where:** ~50 files reference `BlazorDemo`; `src/BlazorDemo.Web/BlazorDemo.Web.csproj` line 7 hard-codes `UserSecretsId=aspnet-BlazorDemo_Web-962658d4-5019-4545-bd46-e76e0b54d305`; README has hard-coded `github.com/rquintino/copilot-blazor-template` badge URL; AGENTS.md and SeedData embed `@template.local` defaults (acceptable, but undocumented).
 **Current:** No `template.json` (for `dotnet new` packaging), no rename script, no documented "find/replace these N strings" recipe in README.
-**Recommended:** Pick one of (a) ship a `dotnet new` template under `.template.config/template.json` with `sourceName` set so the namespace is renamed automatically on instantiation, or (b) add a `scripts/rename-template.sh` that performs `git mv` + `find/replace` for `CopilotBlazorTemplate`, regenerates the `UserSecretsId`, and rewrites the README badge URL, with a short "Make it yours" section in README. Also call out the seeded passwords explicitly as "rotate before any non-dev deploy".
+**Recommended:** Pick one of (a) ship a `dotnet new` template under `.template.config/template.json` with `sourceName` set so the namespace is renamed automatically on instantiation, or (b) add a `scripts/rename-template.sh` that performs `git mv` + `find/replace` for `BlazorDemo`, regenerates the `UserSecretsId`, and rewrites the README badge URL, with a short "Make it yours" section in README. Also call out the seeded passwords explicitly as "rotate before any non-dev deploy".
 **Why:** Real value of a template is repeatable instantiation. Today a forker has 50 places to manually edit, plus a stale UserSecretsId that will collide with other forks on the same machine.
 **Effort:** M
 
@@ -117,21 +117,21 @@ The repo follows the modern src/ + tests/ layout, uses the new `.slnx` solution 
 **Effort:** S
 
 ### [Low] `appsettings.json` ConnectionString writes the SQLite file inside a `Data/` folder at runtime cwd
-**Where:** `src/CopilotBlazorTemplate.Web/appsettings.json` line 3
+**Where:** `src/BlazorDemo.Web/appsettings.json` line 3
 **Current:** `DataSource=Data/app.db;Cache=Shared` — relative path, creates `Data/app.db` next to the running binary (or worse, next to whatever the working directory is when `dotnet run` is invoked from the repo root).
 **Recommended:** Either use `ContentRootPath`-based prefixing in `Program.cs`, or use `%LOCALAPPDATA%`-style platform path, or add `Data/` and `*.db` to `.gitignore` (already covered) and document explicitly in README that the DB is created in the working directory. As a template default, consider `DataSource=app.db` at content root for simplicity. Tangential to repo org but affects "does it work after git clone".
-**Why:** New users running `dotnet run --project src/CopilotBlazorTemplate.Web` from the repo root vs from inside the project end up with the DB in different places. Minor papercut.
+**Why:** New users running `dotnet run --project src/BlazorDemo.Web` from the repo root vs from inside the project end up with the DB in different places. Minor papercut.
 **Effort:** S
 
 ### [Low] `.slnx` solution folders don't surface `docs/`, `build/`, or root meta files
-**Where:** `CopilotBlazorTemplate.slnx`
+**Where:** `BlazorDemo.slnx`
 **Current:** Only `src/` and `tests/` folders with their csproj children. Root files (`Directory.Build.props`, `global.json`, `README.md`, `AGENTS.md`) and `docs/` are invisible in IDE solution view.
 **Recommended:** Add a top-level `<Folder Name="/Solution Items/">` with `<File Path="README.md" />`, `<File Path="AGENTS.md" />`, `<File Path="Directory.Build.props" />`, `<File Path="Directory.Packages.props" />` (once added), `<File Path="global.json" />`, `<File Path=".editorconfig" />`. Visual Studio and Rider both honor this.
 **Why:** Discoverability inside the IDE — contributors editing in VS don't realize `Directory.Build.props` exists.
 **Effort:** S
 
-### [Low] `src/CopilotBlazorTemplate.Core` namespace allows broad imports — folder structure should anticipate growth
-**Where:** `src/CopilotBlazorTemplate.Core/{Data,Entities,Migrations}`
+### [Low] `src/BlazorDemo.Core` namespace allows broad imports — folder structure should anticipate growth
+**Where:** `src/BlazorDemo.Core/{Data,Entities,Migrations}`
 **Current:** Three folders only. No `Abstractions/`, `Services/`, `DTOs/`, or `Configuration/`. Fine for "minimal" but the README invites users to "Add services" without saying where.
 **Recommended:** Either (a) ship empty placeholder folders with a `.gitkeep` + comment, or (b) extend AGENTS.md "How to Extend" to spell out where new layers live (e.g., "domain services in `Core/Services`, EF configurations in `Core/Data/Configurations`"). Don't pre-create folders nobody will use — option (b) is preferred.
 **Why:** Template clarity. Without guidance, two forkers will create `Services/` vs `services/` vs nothing at all.
@@ -173,7 +173,7 @@ copilot-blazor-template/
 ├── AGENTS.md
 ├── CHANGELOG.md                          # NEW
 ├── CONTRIBUTING.md                       # NEW
-├── CopilotBlazorTemplate.slnx            # MODIFIED: add /Solution Items/
+├── BlazorDemo.slnx            # MODIFIED: add /Solution Items/
 ├── Directory.Build.props                 # MODIFIED: add <VersionPrefix>
 ├── Directory.Packages.props              # NEW: Central Package Management
 ├── LICENSE                               # NEW
@@ -192,21 +192,21 @@ copilot-blazor-template/
 │   ├── rename-template.sh                # NEW (if not using dotnet new)
 │   └── setup-dev.sh                      # MODIFIED: drop global installs
 ├── src/
-│   ├── CopilotBlazorTemplate.Core/
-│   │   ├── CopilotBlazorTemplate.Core.csproj   # MODIFIED: no Version= attrs
+│   ├── BlazorDemo.Core/
+│   │   ├── BlazorDemo.Core.csproj   # MODIFIED: no Version= attrs
 │   │   ├── Data/
 │   │   ├── Entities/
 │   │   ├── Migrations/
 │   │   └── packages.lock.json            # NEW (now committed)
-│   └── CopilotBlazorTemplate.Web/
-│       ├── CopilotBlazorTemplate.Web.csproj    # MODIFIED
+│   └── BlazorDemo.Web/
+│       ├── BlazorDemo.Web.csproj    # MODIFIED
 │       └── packages.lock.json            # NEW (now committed)
 ├── tasks/
 │   └── README.md                         # NEW: explain current/ vs backlog/  (or remove tasks/)
 └── tests/
-    ├── CopilotBlazorTemplate.E2ETests/
+    ├── BlazorDemo.E2ETests/
     │   └── packages.lock.json            # NEW (now committed)
-    └── CopilotBlazorTemplate.UnitTests/
+    └── BlazorDemo.UnitTests/
         └── packages.lock.json            # NEW (now committed)
 ```
 

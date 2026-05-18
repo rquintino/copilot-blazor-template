@@ -189,7 +189,7 @@ The `description` is the only field a model sees at skill-selection time — it 
     "sqlite": {
       "command": "uvx",
       "args": ["mcp-server-sqlite@<pinned>",
-               "--db-path", "${workspaceFolder}/src/CopilotBlazorTemplate.Web/app.db"]
+               "--db-path", "${workspaceFolder}/src/BlazorDemo.Web/app.db"]
     },
     "playwright": {
       "command": "npx",
@@ -245,7 +245,7 @@ Issues:
 - run: dotnet build --no-restore
 - name: Install Playwright browsers
   run: |
-    cd tests/CopilotBlazorTemplate.E2ETests
+    cd tests/BlazorDemo.E2ETests
     pwsh bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
 ```
 
@@ -434,7 +434,7 @@ Run it before tests so an agent gets the failure fast.
 - **`.claude/skills/release/SKILL.md`** — bump version in `Directory.Build.props`, tag, push, draft GitHub release notes from sticky CI comments.
 - **`.github/skills/spec-driven/SKILL.md`** — `/spec` style workflow: scaffold `tasks/current/<feature>/spec.md` from a one-line prompt, then `plan.md`, then implementation diffs. Pairs well with the existing `tasks/backlog`+`tasks/current` directory structure already in the repo.
 - **`pre-commit` config or `lefthook.yml`** — enforce `dotnet format` regardless of which agent edited; complements (or replaces) the hook.
-- **`AGENTS.md` per subtree** — `tests/AGENTS.md` ("how to add a test, fixture quirks") and `src/CopilotBlazorTemplate.Web/Components/AGENTS.md` ("render-mode rules, layout selection"). AGENTS.md spec allows hierarchical files; closer-to-code beats one big root file.
+- **`AGENTS.md` per subtree** — `tests/AGENTS.md` ("how to add a test, fixture quirks") and `src/BlazorDemo.Web/Components/AGENTS.md` ("render-mode rules, layout selection"). AGENTS.md spec allows hierarchical files; closer-to-code beats one big root file.
 - **`docs/agentic.md`** — a single page documenting the whole agentic stack (what each file is, which tool consumes it). The audit you're reading now is essentially the first draft.
 - **CI step: ai-bot label gating** — for PRs labelled `copilot` or `claude`, run an extra `dotnet format --verify-no-changes` and an `Are migrations up to date?` check, and post a checklist in the sticky comment.
 

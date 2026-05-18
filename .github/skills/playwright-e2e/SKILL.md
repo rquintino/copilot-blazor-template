@@ -1,10 +1,10 @@
 # Playwright E2E Testing Skill
 
 ## Overview
-End-to-end testing for CopilotBlazorTemplate using Playwright.
+End-to-end testing for BlazorDemo using Playwright.
 
 ## Project Setup
-- Location: `tests/CopilotBlazorTemplate.E2ETests/`
+- Location: `tests/BlazorDemo.E2ETests/`
 - Framework: xUnit + Microsoft.Playwright
 - App startup: `WebApplicationFactory<Program>`
 
@@ -28,10 +28,10 @@ await page.WaitForURLAsync("**/dashboard**");
 ## Running Tests
 ```bash
 # Install browsers first
-cd tests/CopilotBlazorTemplate.E2ETests
+cd tests/BlazorDemo.E2ETests
 dotnet build
 pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium
 
 # Run tests
-dotnet test tests/CopilotBlazorTemplate.E2ETests/
+dotnet test tests/BlazorDemo.E2ETests/
 ```

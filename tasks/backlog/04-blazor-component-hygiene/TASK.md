@@ -20,16 +20,16 @@ Out of scope:
 - Render-mode documentation in `AGENTS.md` (owned by task 10 — this task records the convention in a short comment in `Components/_Imports.razor`).
 
 ## Edit zone
-- `src/CopilotBlazorTemplate.Web/Components/_Imports.razor` (add a small comment documenting the render-mode convention; trim unused `System.Net.Http` imports)
-- `src/CopilotBlazorTemplate.Web/Components/Pages/*.razor`
-- `src/CopilotBlazorTemplate.Web/Components/Account/Pages/*.razor`
-- `src/CopilotBlazorTemplate.Web/Components/Layout/MainLayout.razor`
-- `src/CopilotBlazorTemplate.Web/Components/Layout/AuthenticatedLayout.razor`
-- `src/CopilotBlazorTemplate.Web/Components/Layout/BlazorErrorUi.razor` (new)
-- `src/CopilotBlazorTemplate.Core/Entities/ApplicationUser.cs`
-- A new EF migration for the `DisplayName` `[MaxLength(128)]` change: `src/CopilotBlazorTemplate.Core/Migrations/*` (one new pair of files)
-- `src/CopilotBlazorTemplate.Web/wwwroot/css/theme.css` (additive — append any new component classes needed for the Account pages)
-- `src/CopilotBlazorTemplate.Web/Program.cs` (modify only to add the optional `MapGet("/")` redirect endpoint — if task 03 has shipped, append this; do not restructure)
+- `src/BlazorDemo.Web/Components/_Imports.razor` (add a small comment documenting the render-mode convention; trim unused `System.Net.Http` imports)
+- `src/BlazorDemo.Web/Components/Pages/*.razor`
+- `src/BlazorDemo.Web/Components/Account/Pages/*.razor`
+- `src/BlazorDemo.Web/Components/Layout/MainLayout.razor`
+- `src/BlazorDemo.Web/Components/Layout/AuthenticatedLayout.razor`
+- `src/BlazorDemo.Web/Components/Layout/BlazorErrorUi.razor` (new)
+- `src/BlazorDemo.Core/Entities/ApplicationUser.cs`
+- A new EF migration for the `DisplayName` `[MaxLength(128)]` change: `src/BlazorDemo.Core/Migrations/*` (one new pair of files)
+- `src/BlazorDemo.Web/wwwroot/css/theme.css` (additive — append any new component classes needed for the Account pages)
+- `src/BlazorDemo.Web/Program.cs` (modify only to add the optional `MapGet("/")` redirect endpoint — if task 03 has shipped, append this; do not restructure)
 
 ## Independence guarantee
 - `Program.cs` is owned by task 03 for this cycle. If task 03 ships first, this task appends the `MapGet("/")` endpoint near the other `app.Map…` calls without touching the DI block. If task 03 has not shipped, this task can still ship — just leave `Home.razor` as-is and document the redirect-endpoint approach in this task's follow-up notes (or guard the existing `NavigateTo` on `RendererInfo.IsInteractive`).
@@ -42,7 +42,7 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the compo
 
 - **File already changed by another task.** Read every `.razor` file you plan to touch before editing. If a page already has `@rendermode`, `[StreamRendering]`, an `ErrorBoundary` wrap, or a `CancellationToken` plumbed in, leave it. Where you add new directives, append rather than rewrite the file. If `BlazorErrorUi.razor` already exists, reuse it; do not create a second copy.
 - **File moved/renamed.** Pages may have moved between `Components/Pages/`, feature folders, or the `Account/` subtree. Locate by content/route (e.g. `grep -rln '@page "/dashboard"' src/`, `grep -rln 'class ApplicationUser' src/`) rather than hardcoded paths. If `Home.razor` no longer exists, find whatever component matches `@page "/"` and apply the redirect-fix intent there.
-- **Prerequisite work already done.** Quick checks: does `_Imports.razor` already document the render-mode convention? Does the latest EF migration already constrain `DisplayName` to 128 chars (`grep -r 'DisplayName' src/CopilotBlazorTemplate.Core/Migrations/`)? Is `ApplicationUser` already `sealed`? Skip whatever is already in place and note the skip in the PR description.
+- **Prerequisite work already done.** Quick checks: does `_Imports.razor` already document the render-mode convention? Does the latest EF migration already constrain `DisplayName` to 128 chars (`grep -r 'DisplayName' src/BlazorDemo.Core/Migrations/`)? Is `ApplicationUser` already `sealed`? Skip whatever is already in place and note the skip in the PR description.
 
 ### If you find related work already started
 - Don't undo what's there if its intent matches this task — if `Dashboard.razor` already has `[StreamRendering]` and a working `PersistentComponentState` hookup, the goal is met; move on.
@@ -115,7 +115,7 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the compo
    }
    public void Dispose() { _persistingSubscription.Dispose(); _cts.Cancel(); }
    ```
-9. **CancellationToken flow:** every component that does async work in `OnInitializedAsync` (locate via `grep -rln 'protected override async Task OnInitializedAsync' src/CopilotBlazorTemplate.Web/Components/`) should hold a `CancellationTokenSource _cts = new();` field, cancel it in `Dispose()`, and pass `_cts.Token` to EF / UserManager / HTTP calls that accept one. Skip components that already do this.
+9. **CancellationToken flow:** every component that does async work in `OnInitializedAsync` (locate via `grep -rln 'protected override async Task OnInitializedAsync' src/BlazorDemo.Web/Components/`) should hold a `CancellationTokenSource _cts = new();` field, cancel it in `Dispose()`, and pass `_cts.Token` to EF / UserManager / HTTP calls that accept one. Skip components that already do this.
 10. **Identity pages CSS pass:** the goal is visual consistency between the Identity scaffold pages and the rest of the app. Pick whichever theme the rest of the app uses (the custom theme is recommended since `theme.css` already overrides `.btn-primary`). For each file under `Components/Account/Pages/`, swap the Bootstrap-only class names (`form-floating`, `form-control`, `btn btn-lg btn-primary`, `col-md-*`, `alert alert-*`) for the theme equivalents that have already been applied elsewhere (look at `Login.razor` as the reference if it has already been converted). Move inline `style="..."` blobs to CSS classes in `theme.css`. Preserve underlying HTML elements / `role` / accessible names so E2E selectors stay valid.
 11. **ApplicationUser annotations:** wherever `ApplicationUser` is defined, ensure it is `sealed`, that `DisplayName` carries `[PersonalData]` and `[MaxLength(128)]`, and that the using directives include the right namespaces. Locate via `grep -rln 'class ApplicationUser' src/`:
     ```csharp
@@ -126,7 +126,7 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the compo
         public string DisplayName { get; set; } = string.Empty;
     }
     ```
-12. **Generate migration:** if the latest migration does not already constrain `DisplayName`, generate one — `dotnet ef migrations add ApplicationUserDisplayNameMaxLength --project src/CopilotBlazorTemplate.Core --startup-project src/CopilotBlazorTemplate.Web` (adjust paths if the projects have been renamed). Inspect the generated migration to confirm it adds a `nvarchar(128)` (or SQLite equivalent) column constraint.
+12. **Generate migration:** if the latest migration does not already constrain `DisplayName`, generate one — `dotnet ef migrations add ApplicationUserDisplayNameMaxLength --project src/BlazorDemo.Core --startup-project src/BlazorDemo.Web` (adjust paths if the projects have been renamed). Inspect the generated migration to confirm it adds a `nvarchar(128)` (or SQLite equivalent) column constraint.
 13. Run `dotnet build` and `dotnet test`. Adjust E2E tests only if a selector relied on a Bootstrap class.
 
 ## Acceptance criteria

@@ -14,7 +14,7 @@ cd "$REPO_ROOT"
 
 PORT="${PORT:-5177}"
 APP_URL="http://localhost:${PORT}"
-WEB_PROJECT="src/CopilotBlazorTemplate.Web"
+WEB_PROJECT="src/BlazorDemo.Web"
 DB_PATH="${WEB_PROJECT}/Data/app.db"
 PW_PREFIX="${PW_PREFIX:-/tmp/pw-runner}"
 APP_LOG="${APP_LOG:-/tmp/demo-app.log}"

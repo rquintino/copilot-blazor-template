@@ -10,7 +10,7 @@ Fix the broken plumbing in the repo's agentic surface: move the format-on-edit h
 - Add YAML frontmatter to `.github/skills/playwright-e2e/SKILL.md` and `.github/skills/screenshots-demo/SKILL.md`. Symlink (or duplicate) into `.claude/skills/` so Claude Code discovers them.
 - Reframe `playwright-e2e` SKILL.md from documentation to procedure (or delete it and rely on `.github/instructions/playwright-tests.instructions.md`). Rewrite both `playwright-tests.instructions.md` and the skill to match the real fixture (singleton, `NewAdminContextAsync` / `NewUserContextAsync`, semantic locators, storage-state caching, 2 s default timeouts). Drop references to `WebApplicationFactory` and CSS selectors that the fixture does not use.
 - Fix the `efcore.instructions.md` `applyTo:` glob from comma-separated `**/Data/**,**/Entities/**` to brace form `**/{Data,Entities,Migrations}/**`.
-- Create `.mcp.json` at the repo root pinning `filesystem` (scoped to `${workspaceFolder}`), `sqlite` (scoped to `src/CopilotBlazorTemplate.Web/app.db`), and `playwright`.
+- Create `.mcp.json` at the repo root pinning `filesystem` (scoped to `${workspaceFolder}`), `sqlite` (scoped to `src/BlazorDemo.Web/app.db`), and `playwright`.
 - Clean up `.github/workflows/copilot-setup-steps.yml`: drop `@playwright/cli`, drop `playwright-cli install --skills`, drop `@blazorblueprint/mcp`; add `cache: true` to `setup-dotnet`, `cache: 'npm'` to `setup-node`; remove `|| true` from bootstrap steps; install Playwright browsers via the official `pwsh playwright.ps1 install --with-deps chromium` line.
 - Delete `scripts/record-demo.mjs` and replace it with a thin shell that invokes the skill's `capture.js` (or vice versa). Update the screenshot SKILL.md frontmatter to reflect both outputs (screenshots + video).
 - Fix `screenshots-demo/SKILL.md` step that hardcodes `/home/runner/work/...` — replace with `cd "$(git rev-parse --show-toplevel)"`.
@@ -145,7 +145,7 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the agent
        "sqlite": {
          "command": "uvx",
          "args": ["mcp-server-sqlite@<pinned-version>",
-                  "--db-path", "${workspaceFolder}/src/CopilotBlazorTemplate.Web/app.db"]
+                  "--db-path", "${workspaceFolder}/src/BlazorDemo.Web/app.db"]
        },
        "playwright": {
          "command": "npx",
@@ -158,7 +158,7 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the agent
 10. **`copilot-setup-steps.yml`:** wherever the workflow references `@playwright/cli`, `playwright-cli install --skills`, or `@blazorblueprint/mcp`, remove those steps. Ensure `cache: true` is set on `setup-dotnet` and `cache: 'npm'` on `setup-node`. Remove `|| true` from `dotnet restore` / `dotnet build` so failures surface. Install Playwright browsers via:
    ```yaml
    - name: Install Playwright browsers
-     run: pwsh tests/CopilotBlazorTemplate.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+     run: pwsh tests/BlazorDemo.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
    ```
 11. **Dedup `record-demo.mjs`:** if it still exists, verify no workflow invokes it (`grep -r 'record-demo' .github/`). If safe, `git rm scripts/record-demo.mjs` and add a `scripts/record-demo.sh` one-liner:
     ```bash

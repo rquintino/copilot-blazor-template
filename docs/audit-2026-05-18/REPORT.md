@@ -119,7 +119,7 @@ Items that need a bit more thought than Sprint 0 but are clearly worth doing.
 | 22 | Add `coverlet` collection in CI + ReportGenerator + coverage line in sticky PR comment. | Testing (CC-10) | M |
 | 23 | Add `SECURITY.md`, `CONTRIBUTING.md`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/CODEOWNERS`. | Repo Org (CC-8) | S |
 | 24 | Append "Instructions & Skills", "Pre-flight", "Definition of Done" sections to `AGENTS.md`; symlink `CLAUDE.md` and `.cursorrules` to it. | Agentic Dev | S |
-| 25 | Define template-scrub story: ship a `dotnet new` `template.json`, or a `scripts/rename-template.sh` for the ~50 `CopilotBlazorTemplate` strings + `UserSecretsId` GUID + README badge URL. | Repo Org | M |
+| 25 | Define template-scrub story: ship a `dotnet new` `template.json`, or a `scripts/rename-template.sh` for the ~50 `BlazorDemo` strings + `UserSecretsId` GUID + README badge URL. | Repo Org | M |
 
 ---
 
@@ -135,7 +135,7 @@ Worth doing, no rush. Grouped roughly by theme; see per-theme files for details.
 
 **Testing:** xUnit v2 → v3 migration; pick an assertion library (Shouldly or AwesomeAssertions); add `xunit.runner.json` to UnitTests project; convert duplicate `[Fact]`s to `[Theory]`; add `Deque.AxeCore.Playwright` a11y smoke per top-level page; split CI into `unit-tests` + `e2e-tests` jobs with Playwright browser cache; document `TimeProvider` + `FakeTimeProvider` pattern.
 
-**Agentic Dev:** Reframe or delete `playwright-e2e` skill (currently restates instructions); de-duplicate `scripts/record-demo.mjs` vs `screenshots-demo/capture.js`; add `.github/copilot-instructions.md` (10-line pointer to AGENTS.md); fix `efcore.instructions.md` glob to brace form; fix CI-only hardcoded path in `screenshots-demo/SKILL.md`; add subtree-level `AGENTS.md` files (`tests/AGENTS.md`, `src/CopilotBlazorTemplate.Web/Components/AGENTS.md`); add `docs/agentic.md`.
+**Agentic Dev:** Reframe or delete `playwright-e2e` skill (currently restates instructions); de-duplicate `scripts/record-demo.mjs` vs `screenshots-demo/capture.js`; add `.github/copilot-instructions.md` (10-line pointer to AGENTS.md); fix `efcore.instructions.md` glob to brace form; fix CI-only hardcoded path in `screenshots-demo/SKILL.md`; add subtree-level `AGENTS.md` files (`tests/AGENTS.md`, `src/BlazorDemo.Web/Components/AGENTS.md`); add `docs/agentic.md`.
 
 ---
 

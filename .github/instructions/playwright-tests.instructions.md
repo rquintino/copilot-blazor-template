@@ -4,7 +4,7 @@ applyTo: "**/E2ETests/**"
 
 # Playwright E2E Test Instructions
 
-- Test project: `tests/CopilotBlazorTemplate.E2ETests/`
+- Test project: `tests/BlazorDemo.E2ETests/`
 - Uses `Microsoft.Playwright` NuGet package
 - Use `WebApplicationFactory<Program>` to start the app in-process
 - Browser: Chromium, headless mode

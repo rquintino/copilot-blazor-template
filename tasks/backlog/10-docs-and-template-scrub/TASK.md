@@ -13,12 +13,12 @@ Make the repo discoverable for new contributors and clean to fork: extend `READM
 - Add `tasks/README.md` explaining the `backlog/ → current/ → done/` workflow and pointing to `.github/skills/task-orchestration/SKILL.md`.
 - Update `.slnx` to add a `/Solution Items/` folder containing `README.md`, `AGENTS.md`, `Directory.Build.props`, `Directory.Packages.props` (if it exists), `global.json`, `.editorconfig` (if it exists).
 - Define the template-scrub story. Pick **one**:
-  - (a) Ship a `.template.config/template.json` for `dotnet new` packaging with `sourceName: "CopilotBlazorTemplate"`.
-  - (b) Ship a `scripts/rename-template.sh` that runs `git mv` + find/replace for `CopilotBlazorTemplate`, regenerates the `UserSecretsId` GUID, and rewrites the README badge URL.
+  - (a) Ship a `.template.config/template.json` for `dotnet new` packaging with `sourceName: "BlazorDemo"`.
+  - (b) Ship a `scripts/rename-template.sh` that runs `git mv` + find/replace for `BlazorDemo`, regenerates the `UserSecretsId` GUID, and rewrites the README badge URL.
   - Recommendation: ship (b) first (lower-risk, no behaviour change). Add a short "Make It Yours" section in README that invokes it.
 - Append three sections to `AGENTS.md`: **Instructions & Skills**, **Pre-flight**, **Definition of Done**.
 - Add cross-vendor symlinks at the repo root: `CLAUDE.md → AGENTS.md`, `.cursorrules → AGENTS.md`. Document the symlinks in `AGENTS.md`.
-- Add subtree AGENTS.md files where they earn their keep: `src/CopilotBlazorTemplate.Web/Components/AGENTS.md` (render-mode rules); note: `tests/AGENTS.md` may already be owned by task 07 — only ship if task 07 has not.
+- Add subtree AGENTS.md files where they earn their keep: `src/BlazorDemo.Web/Components/AGENTS.md` (render-mode rules); note: `tests/AGENTS.md` may already be owned by task 07 — only ship if task 07 has not.
 
 Out of scope:
 - LICENSE / SECURITY.md / CONTRIBUTING.md / CODEOWNERS / PR template / CHANGELOG (owned by task 01).
@@ -36,9 +36,9 @@ Out of scope:
 - `docs/adr/0001-record-architecture-decisions.md` (new)
 - `tasks/README.md` (new)
 - `tasks/current/copilot-blazor-template/.gitkeep` (delete if empty and unused)
-- `CopilotBlazorTemplate.slnx` (additive — append a `/Solution Items/` folder; do not modify the existing `tests/` or `src/` folders)
+- `BlazorDemo.slnx` (additive — append a `/Solution Items/` folder; do not modify the existing `tests/` or `src/` folders)
 - `scripts/rename-template.sh` (new) **or** `.template.config/template.json` (new) — pick one
-- `src/CopilotBlazorTemplate.Web/Components/AGENTS.md` (new)
+- `src/BlazorDemo.Web/Components/AGENTS.md` (new)
 - `tests/AGENTS.md` (new — only if task 07 has not shipped it)
 
 ## Independence guarantee
@@ -63,7 +63,7 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the docs 
 - Coordination happens via the PR description and the existing sticky CI comment, not via blocking dependencies between tasks.
 
 ## Steps
-1. **Verify current state first.** Read `README.md`, `AGENTS.md`, `CopilotBlazorTemplate.slnx`, the `docs/` tree, and `tasks/` end-to-end before editing. Check for existing symlinks (`ls -la CLAUDE.md .cursorrules`) and existing scripts (`ls scripts/`). The snippets below describe the *intent* of each addition — apply that intent to whatever exists today. If a file has been moved/renamed (e.g. the solution file converted to `.sln`), work against the current name. Skip steps whose intent is already in place and note in the PR description.
+1. **Verify current state first.** Read `README.md`, `AGENTS.md`, `BlazorDemo.slnx`, the `docs/` tree, and `tasks/` end-to-end before editing. Check for existing symlinks (`ls -la CLAUDE.md .cursorrules`) and existing scripts (`ls scripts/`). The snippets below describe the *intent* of each addition — apply that intent to whatever exists today. If a file has been moved/renamed (e.g. the solution file converted to `.sln`), work against the current name. Skip steps whose intent is already in place and note in the PR description.
 2. **README.md** restructure. Target order (insert missing sections; do NOT rewrite existing sections that already cover the topic):
    - Title + badges (keep current).
    - One-paragraph elevator pitch.
@@ -71,7 +71,7 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the docs 
    - **Prerequisites** (new).
    - Architecture overview (keep current table).
    - Screenshots (keep).
-   - **Running Tests** (new — `dotnet test`; `pwsh tests/CopilotBlazorTemplate.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium` first).
+   - **Running Tests** (new — `dotnet test`; `pwsh tests/BlazorDemo.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium` first).
    - **Using With AI Agents** (new — link AGENTS.md, `.github/instructions/`, `.github/skills/`).
    - **Make It Yours** (new — point at `scripts/rename-template.sh`).
    - Tech stack (keep).
@@ -115,7 +115,7 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the docs 
    #!/usr/bin/env bash
    set -euo pipefail
    new_name="${1:?usage: rename-template.sh <NewName>}"
-   old=CopilotBlazorTemplate
+   old=BlazorDemo
 
    # 1. Replace strings in tracked files (skip tasks/done/, docs/audits/, .git, binaries)
    git ls-files | grep -vE '^(tasks/done/|docs/audits/|.*\.(png|jpg|webm|db))$' \
@@ -164,7 +164,7 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the docs 
    ln -s AGENTS.md .cursorrules
    ```
    Commit the symlinks (`git ls-files` will show them).
-9. **`src/CopilotBlazorTemplate.Web/Components/AGENTS.md`** (skip if present; locate via `git ls-files`) — short (≤30 lines) note documenting:
+9. **`src/BlazorDemo.Web/Components/AGENTS.md`** (skip if present; locate via `git ls-files`) — short (≤30 lines) note documenting:
    - Default render mode is static SSR.
    - Opt in to `@rendermode InteractiveServer` only when needed.
    - Use `@attribute [StreamRendering]` for async data on init.
@@ -175,11 +175,11 @@ This task may sit in `backlog/` for weeks. By the time it is picked up the docs 
 - [ ] README.md contains Prerequisites, Running Tests, Using With AI Agents, Make It Yours, Contributing, Security, License sections.
 - [ ] `docs/README.md`, `docs/architecture/overview.md`, `docs/adr/0001-record-architecture-decisions.md` exist.
 - [ ] `tasks/README.md` exists and links to `.github/skills/task-orchestration/SKILL.md`.
-- [ ] `CopilotBlazorTemplate.slnx` has a `/Solution Items/` folder listing the root meta files.
+- [ ] `BlazorDemo.slnx` has a `/Solution Items/` folder listing the root meta files.
 - [ ] Either `scripts/rename-template.sh` (executable) or `.template.config/template.json` exists.
 - [ ] AGENTS.md has Instructions & Skills, Pre-flight, and Definition of Done sections appended (existing content unchanged).
 - [ ] `CLAUDE.md` and `.cursorrules` symlinks exist and resolve to `AGENTS.md`.
-- [ ] `src/CopilotBlazorTemplate.Web/Components/AGENTS.md` exists.
+- [ ] `src/BlazorDemo.Web/Components/AGENTS.md` exists.
 - [ ] `dotnet build` and `dotnet test` still pass (no source code touched).
 - [ ] `git ls-files` shows the new and renamed files; no `tasks/done/` or `docs/audits/` files were modified.
 

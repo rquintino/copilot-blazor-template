@@ -8,7 +8,7 @@ The template is small, builds cleanly on .NET 10, and follows the current ASP.NE
 - Primary constructors used in hand-written services (`IdentityRedirectManager`, `IdentityRevalidatingAuthenticationStateProvider`).
 - `sealed` applied consistently to internal Identity scaffold types and to private nested `InputModel` classes.
 - Collection expressions used in seed (`string[] roles = ["Admin", "User"];` at `SeedData.cs:15`).
-- `BlazorDisableThrowNavigationException` enabled in `CopilotBlazorTemplate.Web.csproj:8` (correct .NET 10 default).
+- `BlazorDisableThrowNavigationException` enabled in `BlazorDemo.Web.csproj:8` (correct .NET 10 default).
 - `MapStaticAssets()` (replaces the legacy `UseStaticFiles`) is wired in `Program.cs:65`.
 - `RestorePackagesWithLockFile` + `NuGetAudit=all` at `Directory.Build.props:3-6` (good supply-chain posture).
 - `IdentityRevalidatingAuthenticationStateProvider` uses `CreateAsyncScope` + `await using` (correct pattern).
@@ -17,7 +17,7 @@ The template is small, builds cleanly on .NET 10, and follows the current ASP.NE
 ## Findings
 
 ### [Severity: High] No `IDbContextFactory<AppDbContext>` for Blazor Server interactive components
-**Where:** `src/CopilotBlazorTemplate.Web/Program.cs:21-22`
+**Where:** `src/BlazorDemo.Web/Program.cs:21-22`
 **Current:**
 ```csharp
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -28,7 +28,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 **Effort:** S
 
 ### [Severity: High] Auto-migration and seeding run unguarded at startup with no logging or error policy
-**Where:** `src/CopilotBlazorTemplate.Web/Program.cs:42-47`
+**Where:** `src/BlazorDemo.Web/Program.cs:42-47`
 **Current:**
 ```csharp
 using (var scope = app.Services.CreateScope())
@@ -60,7 +60,7 @@ using (var scope = app.Services.CreateScope())
 
 ### [Severity: Med] No central package management (`Directory.Packages.props`)
 **Where:** repo root (missing) + version numbers duplicated across two `.csproj` files
-**Current:** `Microsoft.EntityFrameworkCore.Design 10.0.8` is declared in both `CopilotBlazorTemplate.Web.csproj:13` and `CopilotBlazorTemplate.Core.csproj:11`.
+**Current:** `Microsoft.EntityFrameworkCore.Design 10.0.8` is declared in both `BlazorDemo.Web.csproj:13` and `BlazorDemo.Core.csproj:11`.
 **Recommended:** Add `Directory.Packages.props` with `<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>` and `<PackageVersion>` entries; strip versions from `<PackageReference>` in the project files.
 **Why:** CPM is the .NET-recommended approach for multi-project repos since .NET 8 and prevents version drift, especially as more projects (tests, future Workers, function apps) are added.
 **Effort:** S
@@ -80,7 +80,7 @@ using (var scope = app.Services.CreateScope())
 **Effort:** M
 
 ### [Severity: Med] `Admin.razor` runs N+1 role lookups inside a foreach
-**Where:** `src/CopilotBlazorTemplate.Web/Components/Pages/Admin.razor:48-61`
+**Where:** `src/BlazorDemo.Web/Components/Pages/Admin.razor:48-61`
 **Current:**
 ```csharp
 var allUsers = await UserManager.Users.ToListAsync();
@@ -95,14 +95,14 @@ foreach (var user in allUsers)
 **Effort:** S
 
 ### [Severity: Med] `Home.razor` does post-render navigation in `OnInitializedAsync` — double-render on prerender
-**Where:** `src/CopilotBlazorTemplate.Web/Components/Pages/Home.razor:16-23`
+**Where:** `src/BlazorDemo.Web/Components/Pages/Home.razor:16-23`
 **Current:** Calls `NavigationManager.NavigateTo("/dashboard")` inside `OnInitializedAsync`.
 **Recommended:** For SSR-only redirects, return a `RedirectResult` via the request pipeline, or use `NavigationManager.NavigateTo(url, forceLoad: false)` after checking `RendererInfo.IsInteractive` / firstRender. Better: in `Program.cs`, map a `MapGet("/", (...) => ...)` minimal endpoint that returns `Results.LocalRedirect("/dashboard")` for authenticated users, leaving the Razor component only for the anonymous landing. Or use `@attribute [Authorize]` plus a static SSR landing for unauthenticated users.
 **Why:** During prerender the component renders, then immediately navigates, producing a wasted render and visible flash for the user. .NET 8+ added `NavigationManager.NavigateTo` SSR-aware behaviour, but starting work in `OnInitializedAsync` still runs twice (prerender + interactive) unless guarded.
 **Effort:** S
 
 ### [Severity: Med] No `ErrorBoundary` around routed content
-**Where:** `src/CopilotBlazorTemplate.Web/Components/Routes.razor`, `Layout/MainLayout.razor`
+**Where:** `src/BlazorDemo.Web/Components/Routes.razor`, `Layout/MainLayout.razor`
 **Current:** Layouts only ship the `<div id="blazor-error-ui">` toast. There is no `<ErrorBoundary>` wrapping `@Body` in either layout.
 **Recommended:**
 ```razor
@@ -124,7 +124,7 @@ foreach (var user in allUsers)
 **Effort:** L
 
 ### [Severity: Med] `ApplicationUser.DisplayName` lacks data annotations and personal-data marker
-**Where:** `src/CopilotBlazorTemplate.Core/Entities/ApplicationUser.cs:7`
+**Where:** `src/BlazorDemo.Core/Entities/ApplicationUser.cs:7`
 **Current:** `public string DisplayName { get; set; } = string.Empty;`
 **Recommended:** Add `[ProtectedPersonalData]` (or `[PersonalData]`) and a `[MaxLength(...)]` so EF Core picks a sensible column type and the GDPR personal-data download endpoint includes it. Consider `required` and a primary-constructor / `init` setter:
 ```csharp
@@ -186,7 +186,7 @@ Plus `AddAuthorization()` explicitly.
 **Effort:** S
 
 ### [Severity: Low] `SeedData.InitializeAsync` ignores `IdentityResult` failures and uses `IServiceProvider` directly
-**Where:** `src/CopilotBlazorTemplate.Core/Data/SeedData.cs:9-51`
+**Where:** `src/BlazorDemo.Core/Data/SeedData.cs:9-51`
 **Current:** Calls to `CreateAsync`, `AddToRoleAsync` discard return values. A failed seed (e.g. password policy change) silently leaves the app without an admin user. Method also takes `IServiceProvider` instead of strongly-typed dependencies.
 **Recommended:** Convert to a primary-constructor class with typed deps: `internal sealed class DatabaseSeeder(UserManager<ApplicationUser> users, RoleManager<IdentityRole> roles, ILogger<DatabaseSeeder> logger)`. Check each `IdentityResult.Succeeded`, log/throw on failure. Register and call from a `IHostedService` for proper lifetime handling.
 **Effort:** S
@@ -232,14 +232,14 @@ Plus `AddAuthorization()` explicitly.
 **Effort:** M
 
 ### [Severity: Low] `appsettings.Development.json` does not override `Microsoft.EntityFrameworkCore` logging
-**Where:** `src/CopilotBlazorTemplate.Web/appsettings.Development.json`
+**Where:** `src/BlazorDemo.Web/appsettings.Development.json`
 **Recommended:** Add `"Microsoft.EntityFrameworkCore.Database.Command": "Information"` in Dev to see SQL during development, and surface failed migrations.
 **Effort:** S
 
 ### [Severity: Low] No `<InternalsVisibleTo>` for unit tests (only E2E)
-**Where:** `src/CopilotBlazorTemplate.Web/CopilotBlazorTemplate.Web.csproj:25`
-**Current:** Only `CopilotBlazorTemplate.E2ETests` is exposed. Internal helpers like `IdentityRedirectManager` are unreachable from unit tests.
-**Recommended:** Add `<InternalsVisibleTo Include="CopilotBlazorTemplate.UnitTests" />` (and consider mirroring in Core).
+**Where:** `src/BlazorDemo.Web/BlazorDemo.Web.csproj:25`
+**Current:** Only `BlazorDemo.E2ETests` is exposed. Internal helpers like `IdentityRedirectManager` are unreachable from unit tests.
+**Recommended:** Add `<InternalsVisibleTo Include="BlazorDemo.UnitTests" />` (and consider mirroring in Core).
 **Effort:** S
 
 ## Quick wins (top 5)
