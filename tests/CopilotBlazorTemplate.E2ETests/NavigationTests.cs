@@ -29,9 +29,10 @@ public class NavigationTests : IClassFixture<PlaywrightFixture>
     {
         // Real login so the post-logout cookie state on this context is observable.
         var page = await _fixture.LoginAsAsync("user@template.local", "User123!");
+        // ClickAsync on a submit button awaits the form post + redirect chain.
         await page.GetByRole(AriaRole.Button, new() { Name = "Logout" }).ClickAsync();
-        await page.WaitForURLAsync(new System.Text.RegularExpressions.Regex(".*/(?!Account).*$"));
 
+        // With the cookie cleared, hitting a protected page should bounce to login.
         await page.GotoAsync($"{_fixture.BaseUrl}/dashboard");
         await page.WaitForURLAsync("**/Account/Login**");
         Assert.Contains("/Account/Login", page.Url);
