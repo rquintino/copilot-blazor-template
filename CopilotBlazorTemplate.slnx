@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CopilotBlazorTemplate.Core/CopilotBlazorTemplate.Core.csproj" />
+    <Project Path="src/CopilotBlazorTemplate.Web/CopilotBlazorTemplate.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CopilotBlazorTemplate.E2ETests/CopilotBlazorTemplate.E2ETests.csproj" />
+    <Project Path="tests/CopilotBlazorTemplate.UnitTests/CopilotBlazorTemplate.UnitTests.csproj" />
+  </Folder>
+</Solution>
