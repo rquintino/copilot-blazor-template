@@ -8,7 +8,7 @@ jobs:
   copilot-setup-steps:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.x"
@@ -18,14 +18,15 @@ jobs:
       - name: Install dotnet-ef
         run: dotnet tool install --global dotnet-ef
       # Note: Playwright MCP is auto-configured for the Copilot cloud agent
-      # (docs.github.com/en/copilot/concepts/agents/cloud-agent/mcp-and-cloud-agent),
-      # so the JS Playwright CLI is not installed here. Use the MCP server for
-      # ad-hoc browser interaction. The .NET E2E suite uses Microsoft.Playwright
-      # (NuGet) and installs browsers via playwright.ps1 — see .github/workflows/ci.yml.
+      # (docs.github.com/en/copilot/concepts/agents/cloud-agent/mcp-and-cloud-agent)
+      # for ad-hoc browser interaction. The .NET E2E suite uses Microsoft.Playwright
+      # (NuGet) and needs browsers installed via playwright.ps1 (step below).
       - name: Restore and Build
         run: |
           dotnet restore
           dotnet build
+      - name: Install Playwright Browsers (.NET E2E)
+        run: pwsh tests/CopilotBlazorTemplate.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
       - name: Verify versions
         run: |
           dotnet --version
