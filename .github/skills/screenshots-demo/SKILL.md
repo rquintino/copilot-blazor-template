@@ -1,64 +1,74 @@
 # Screenshots & Demo Video Capture Skill
 
 ## Overview
-Captures page screenshots (PNG) and records a full-flow demo video (WebM) for the Copilot Blazor Template app using Playwright.
+Captures page screenshots (PNG) and records a full-flow demo video (WebM) for the app using Playwright. **Config-driven** — edit `docs/screenshots.config.json` to change what gets captured. No code changes needed when you add new pages.
 
-## Prerequisites
-- Node.js 20+ installed
-- `npx playwright` available (comes with Node.js)
-- .NET 10 SDK (to build and run the app)
-- App builds successfully (`dotnet build`)
-
-## Quick Execution (copy-paste ready)
-
-### Step 1: Install Playwright + Chromium
+## TL;DR — one command
 ```bash
+bash scripts/demo.sh
+```
+That's it. The script kills any stale process on :5177, resets the SQLite DB so seed data is deterministic, installs Playwright + Chromium into `/tmp/pw-runner` if missing, starts the app, waits for it to respond, runs the capture, and stops the app on exit (including on Ctrl-C).
+
+Outputs land in `docs/screenshots/<name>.png` and `docs/demo/<outputFile>`.
+
+## Adding or changing pages
+Edit `docs/screenshots.config.json`. Example: to add a `/transfers` screenshot when building a banking feature:
+
+```json
+{
+  "screenshots": [
+    { "name": "transfers", "path": "/transfers", "auth": "admin", "waitMs": 2000 }
+  ]
+}
+```
+
+Schema:
+- `baseUrl` — defaults to `http://localhost:5177`; can be overridden via `APP_URL` env var.
+- `viewport` — `{ width, height }`. Defaults to 1280×720.
+- `credentials` — named credential pairs, referenced by `auth` fields.
+- `screenshots[]` — list of pages. Fields: `name` (filename stem, required), `path` (URL path, required), `auth` (credentials key, optional), `waitMs` (extra wait after `networkidle`, optional — useful for InteractiveServer pages that need ~2s for the SignalR connection).
+- `demo.steps[]` — storyboard for the video. Each step accepts `banner` (overlay text), `path` (navigate), `action` (`"login"` / `"logout"`), `auth`, `waitMs`.
+
+The script logs in once per auth context, so order screenshots by `auth` to minimize redundant logins (unauthenticated first, then per-user).
+
+## Configuration overrides
+| Env var | Default | Purpose |
+|---|---|---|
+| `PORT` | `5177` | Port the app starts on. |
+| `APP_URL` | `http://localhost:$PORT` | What `capture.js` connects to. |
+| `SCREENSHOTS_CONFIG` | `docs/screenshots.config.json` | Alternate config file path. |
+| `PW_PREFIX` | `/tmp/pw-runner` | Where Playwright is installed when not in project node_modules. |
+| `APP_LOG` | `/tmp/demo-app.log` | App stdout/stderr destination. |
+
+## Why config-driven
+Previously this script hardcoded the template's pages (landing, login, dashboard, admin). When an agent built a different app on top (banking, todo, etc.) it had to either rewrite the script or improvise — both burned wall time. Now: add a line to the config, re-run `scripts/demo.sh`, done.
+
+## Manual fallback (rarely needed)
+Use only if `scripts/demo.sh` fails for an environment-specific reason. The script encodes the same flow.
+
+```bash
+# 1. Install Playwright + Chromium
 npm install playwright --prefix /tmp/pw-runner
-npx playwright install chromium
-```
+"/tmp/pw-runner/node_modules/.bin/playwright" install chromium
 
-### Step 2: Start the App
-```bash
-cd /home/runner/work/copilot-blazor-template/copilot-blazor-template
-rm -f src/CopilotBlazorTemplate.Web/app.db
-ASPNETCORE_URLS="http://localhost:5177" ASPNETCORE_ENVIRONMENT="Development" nohup dotnet run --project src/CopilotBlazorTemplate.Web --no-launch-profile > /tmp/app.log 2>&1 &
+# 2. Reset DB and start app
+rm -f src/CopilotBlazorTemplate.Web/Data/app.db
+ASPNETCORE_URLS="http://localhost:5177" ASPNETCORE_ENVIRONMENT="Development" \
+  nohup dotnet run --project src/CopilotBlazorTemplate.Web --no-launch-profile \
+  > /tmp/demo-app.log 2>&1 &
 APP_PID=$!
-echo "App PID: $APP_PID"
-# Wait for ready (up to 60s)
-for i in $(seq 1 30); do curl -sf http://localhost:5177 > /dev/null 2>&1 && echo "APP READY" && break; sleep 2; done
+for i in $(seq 1 45); do curl -sf http://localhost:5177 >/dev/null 2>&1 && break; sleep 2; done
+
+# 3. Run capture
+node .github/skills/screenshots-demo/capture.js
+
+# 4. Stop app
+kill $APP_PID
 ```
-
-### Step 3: Run the Capture Script
-```bash
-node /home/runner/work/copilot-blazor-template/copilot-blazor-template/.github/skills/screenshots-demo/capture.js
-```
-
-### Step 4: Stop the App
-```bash
-kill $APP_PID 2>/dev/null
-```
-
-## Output Files
-| File | Description |
-|------|-------------|
-| `docs/screenshots/landing.png` | Landing/home page (1280×720+) |
-| `docs/screenshots/login.png` | Login page with credential hints |
-| `docs/screenshots/dashboard.png` | Dashboard (logged in as admin) |
-| `docs/screenshots/admin.png` | Admin panel with user table |
-| `docs/demo/copilot-blazor-template-demo.webm` | Full flow video (~30-45s, 1280×720) |
-
-## Key Details
-- **Port**: 5177 (avoids conflicts with common ports)
-- **Launch profile**: Must use `--no-launch-profile` and set `ASPNETCORE_URLS` env var
-- **nohup**: Required so the app stays alive across shell invocations
-- **DB reset**: Delete `app.db` before starting to get clean seed data
-- **Login credentials**: admin@template.local / Admin123!
-- **Login form selectors**: `input[name="Input.Email"]`, `input[name="Input.Password"]`, `button[type="submit"]`
-- **Dashboard redirect**: After login, URL matches `**/dashboard**`
-- **InteractiveServer pages**: Need 2s wait after navigation for Blazor SignalR to connect
-- **Chromium only**: No need for Firefox/WebKit
 
 ## Troubleshooting
-- If `ERR_CONNECTION_REFUSED`: app died — restart with nohup, verify with `curl -sf http://localhost:5177`
-- If login doesn't redirect: check `page.url()` — may need to navigate manually to `/dashboard`
-- If video is empty: ensure `page.close()` + `context.close()` are called (triggers video save)
+- `App not running at http://localhost:5177`: `scripts/demo.sh` should have started it — check `/tmp/demo-app.log`.
+- `App process died`: usually a build error or a DB migration failure. Run `dotnet build` to surface it.
+- Empty/short video: ensure the `demo.steps` list isn't empty and the closing card path is reachable.
+- Login doesn't redirect to expected URL: the script now waits on `networkidle` instead of a hardcoded `/dashboard` pattern, so apps with different post-login routes still work.
+- Need to capture against an already-running app: skip `scripts/demo.sh` and run `node .github/skills/screenshots-demo/capture.js` directly (set `APP_URL` if not on :5177).

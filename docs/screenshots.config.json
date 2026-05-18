@@ -1,0 +1,28 @@
+{
+  "$schema": "./screenshots.config.schema.json",
+  "baseUrl": "http://localhost:5177",
+  "viewport": { "width": 1280, "height": 720 },
+  "credentials": {
+    "admin": { "email": "admin@template.local", "password": "Admin123!" }
+  },
+  "screenshots": [
+    { "name": "landing",   "path": "/" },
+    { "name": "login",     "path": "/Account/Login" },
+    { "name": "dashboard", "path": "/dashboard", "auth": "admin", "waitMs": 2000 },
+    { "name": "admin",     "path": "/admin",     "auth": "admin", "waitMs": 2000 }
+  ],
+  "demo": {
+    "outputFile": "copilot-blazor-template-demo.webm",
+    "title": "Copilot Blazor Template — Demo",
+    "closing": "Built with GitHub Copilot",
+    "steps": [
+      { "banner": "Landing Page — Public, no auth required", "path": "/", "waitMs": 1500 },
+      { "banner": "Navigating to Login...", "path": "/Account/Login", "waitMs": 1500 },
+      { "banner": "Logging in as Admin", "action": "login", "auth": "admin", "waitMs": 1000 },
+      { "banner": "Dashboard — Authenticated users only", "waitMs": 2000 },
+      { "banner": "Navigating to Admin Panel...", "path": "/admin", "waitMs": 1000 },
+      { "banner": "Admin Panel — Admin role required", "waitMs": 2000 },
+      { "banner": "Logging out...", "action": "logout", "waitMs": 2000 }
+    ]
+  }
+}
