@@ -3,7 +3,7 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
-@using CopilotBlazorTemplate.Web.Data
+@using CopilotBlazorTemplate.Core.Entities
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
@@ -51,9 +51,6 @@
                 <div>
                     <p>
                         <a href="Account/ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
                     </p>
                     <p>
                         <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>

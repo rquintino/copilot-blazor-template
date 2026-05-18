@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using CopilotBlazorTemplate.Web.Data;
+using CopilotBlazorTemplate.Core.Entities;
 
 namespace CopilotBlazorTemplate.Web.Components.Account;
 

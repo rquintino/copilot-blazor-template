@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using CopilotBlazorTemplate.Web.Components.Account.Pages;
 using CopilotBlazorTemplate.Web.Components.Account.Pages.Manage;
-using CopilotBlazorTemplate.Web.Data;
+using CopilotBlazorTemplate.Core.Entities;
 
 namespace Microsoft.AspNetCore.Routing;
 
