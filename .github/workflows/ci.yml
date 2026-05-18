@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dotnet-ef
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Unit Tests
+        run: dotnet test tests/CopilotBlazorTemplate.UnitTests/ --configuration Release --no-build --verbosity normal
+
+      - name: Install Playwright Browsers
+        run: |
+          cd tests/CopilotBlazorTemplate.E2ETests
+          dotnet build
+          pwsh bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
+      - name: E2E Tests
+        run: dotnet test tests/CopilotBlazorTemplate.E2ETests/ --configuration Release --verbosity normal
+
+      - name: Upload Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: docs/screenshots/
+          retention-days: 7
+          if-no-files-found: ignore
