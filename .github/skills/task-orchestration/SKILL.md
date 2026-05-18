@@ -1,6 +1,6 @@
 ---
 name: task-orchestration
-description: Orchestrate work from tasks/backlog/ through current/ to done/. Use PROACTIVELY at the start of any non-trivial user request (features, bug fixes with investigation, audits, anything PR-worthy) — scaffold a TASK.md in tasks/backlog/, then git mv it to tasks/current/ before doing the work. Also use when the user asks to dispatch backlog tasks, work the next task, run multiple tasks in parallel, or check task status. Defines the TASK.md contract, independence rules, lifecycle (backlog → current → done), and shared-file ownership principles.
+description: Move existing tasks through the `tasks/backlog/ → current/ → done/` lifecycle. Use when a task folder already exists, when the user asks to dispatch backlog tasks, work the next task, or check task status. The main agent **does not create persisted tasks** — those are authored upstream (user, audits, dispatch from another agent, the bootstrap-new-app hand-off). For sub-step decomposition inside a single run, use the agent's built-in todo tool, not new TASK.md files. This skill defines: lifecycle moves the main agent IS allowed to perform, the TASK.md contract that upstream authors should follow, independence rules, and shared-file ownership principles.
 ---
 
 # Task orchestration
@@ -70,6 +70,7 @@ regardless of whether other tasks have shipped. Use the patterns below.
 ## Acceptance criteria
 - [ ] Bullet checklist a reviewer (or subagent) can verify.
 - [ ] Include "build green", "tests green", "format clean" as appropriate.
+- [ ] `README.md` and `AGENTS.md` reviewed and updated (or noted `no changes required`).
 
 ## References
 - Links to source material (audit findings, design docs, ADRs, issues).
@@ -103,17 +104,26 @@ Some files are touched by many tasks (CI workflows, root configs, `AGENTS.md`, R
 
 This principle is intentionally generic. Specific ownership tables belong inside the individual TASK.md files (in their `Edit zone` section), not in this skill, because ownership shifts every cycle.
 
-## Proactive task creation (default for non-trivial requests)
+## Task authorship — who creates persisted tasks
 
-When the user makes a request that is "worth tracking" — anything you would normally open a PR for — spawn a task **before** doing the work, rather than waiting to be asked. The flow:
+**The main agent does not create persisted tasks.** Folders under `tasks/` are upstream artifacts; the main agent consumes them, moves them, and updates their progress, nothing more.
 
-1. **Decide if the request qualifies.** Trigger threshold: features, bug fixes that require investigation, audits, refactors with cross-file impact, anything PR-worthy. **Skip** for: pure Q&A, single-line tweaks, formatting/rename chores, trivial config edits, work the user explicitly says is throwaway.
-2. **Scaffold the TASK.md in `tasks/backlog/`.** Pick the next free `NN-` prefix (one above the highest existing number across all three folders). Slug from the request. Fill in the contract sections — at minimum Goal, Scope, Edit zone, Steps, Acceptance criteria — based on what the user asked for. Keep it short; you can refine as you learn more.
-3. **Immediately `git mv` it to `tasks/current/`.** Backlog is "queued, not yet picked"; the moment you start working, it belongs in `current/`. Don't commit the move on its own when you're about to start work in the same turn — fold the move into the first commit of the task.
-4. **Do the work.** Follow Steps and respect the Edit zone you declared. If scope creeps mid-task, update the TASK.md rather than silently expanding.
-5. **On completion, `git mv` to `tasks/done/`.** Tick the acceptance criteria boxes. Same commit-folding rule applies.
+**Who creates persisted tasks (allowed authors):**
+- The **user** (directly, or by running an audit/planning session).
+- The **`bootstrap-new-app`** flow, when it hands off a single follow-up task at the end of bootstrap.
+- An **explicit dispatch from another agent** acting in an orchestrator role.
 
-If a request feels borderline, default to creating the task — over-tracking is cheap, under-tracking loses history. If you're genuinely unsure, ask the user once.
+**What the main agent IS allowed to do:**
+- `git mv` a folder `backlog/ → current/` to claim work.
+- `git mv` a folder `current/ → done/` to close work.
+- Edit the active TASK.md inside `current/` to update progress, tick acceptance-criteria boxes, append notes.
+- Use the **built-in todo tool** to decompose the current run into sub-steps. These todos are ephemeral — they live in the agent's session, not on disk.
+
+**Un-bootstrapped template clone:** before doing anything, run `grep -rIlq CopilotBlazorTemplate . --exclude-dir={.git,bin,obj,node_modules}`. If it finds matches and the user's request describes building a new app/feature/domain, defer to `.github/skills/bootstrap-new-app/SKILL.md` first — its rename phase must run before any task-tracked work, or template names get baked into the new app.
+
+**No existing task and the user asks for something non-trivial?** Do not silently scaffold one. Work directly against the user's request, using the internal todo tool to track sub-steps. If the user explicitly asks for a persisted TASK.md, follow the contract in *Authoring a new TASK.md* below — but only on request, not by default.
+
+**Why this rule:** the workshop scenario (clone → ask Copilot to build an app) does not benefit from a dozen markdown TASK.md files for sub-steps the agent invents. Persisted tasks are for work the user or an orchestrator wants tracked across sessions; intra-session decomposition belongs in the agent's own todo list.
 
 ## Dispatch workflow
 
@@ -137,7 +147,7 @@ If running multiple tasks at once:
 
 ## Authoring a new TASK.md
 
-When the user (or you) want to add a task to the backlog, scaffold it from this template:
+**Upstream/dispatch use only.** The main agent does not author TASK.md files during normal work (see *Task authorship* above). Use this template when the user explicitly asks for a persisted task, when populating a backlog from an audit, or when an orchestrator hands off work to a sub-agent:
 
 ```markdown
 # <title>
@@ -171,6 +181,7 @@ This task runs cleanly with or without other backlog tasks. Specifically:
 - [ ] `dotnet test` succeeds.
 - [ ] `dotnet format --verify-no-changes` succeeds.
 - [ ] If UI pages were added or changed: `docs/screenshots.config.json` updated and `bash scripts/demo.sh` regenerated artifacts in `docs/screenshots/` and `docs/demo/`.
+- [ ] `README.md` and `AGENTS.md` reviewed and updated to reflect this task's changes (or noted `no changes required`).
 - [ ] <task-specific check>
 
 ## References
@@ -187,7 +198,8 @@ These rules apply at the **end** of every task, just before moving the folder to
 2. **Commit, do not push.** In the Copilot coding-agent environment, `git push` is blocked at the credential layer — the recent banking-app run wasted turns on `Push changes` → `Try alternative push` → "failing due to credentials". Commits are fine; they accumulate locally. The PR-creation step at the end of the task (`gh pr create`) handles publishing the branch and the commits in a single operation.
 3. **Do not invoke Copilot code review or CodeQL mid-task.** Both run automatically as PR checks once `gh pr create` succeeds. Running them locally before the PR exists tends to hang on missing-origin-branch credentials (same reason `git push` fails), and even on success it duplicates work the PR will redo. Skip them and let the PR pipeline do its job.
 4. **Run the validator skill before the move to `done/`.** Invoke `.github/skills/validator/SKILL.md` and confirm every applicable check passes. If a check fails, the task is not done — fix and re-validate. The validator is read-only; it reports, it does not patch.
-5. **Open the PR last.** `gh pr create` is the publishing step. It is the *only* operation in the task lifecycle that contacts origin. If `gh pr create` fails, do not retry with `git push` — read the gh error, fix the cause, retry `gh pr create`.
+5. **Review `README.md` and `AGENTS.md` — critical, non-negotiable.** A task is not done until both files have been read end-to-end and updated to reflect the changes this task introduced. Pages added, entities introduced, commands changed, environment variables added, seed credentials changed, project layout shifted — any of these invalidate the existing docs. If the task changes nothing the docs describe, state that explicitly in the task notes (`README/AGENTS reviewed: no changes required`) — silence is not a pass. This gate exists because stale README/AGENTS docs poison every future agent session that starts from them.
+6. **Open the PR last.** `gh pr create` is the publishing step. It is the *only* operation in the task lifecycle that contacts origin. If `gh pr create` fails, do not retry with `git push` — read the gh error, fix the cause, retry `gh pr create`.
 
 ## Anti-patterns
 
@@ -199,6 +211,9 @@ These rules apply at the **end** of every task, just before moving the folder to
 - **Editing a TASK.md after the task is moved to `done/`** — done is immutable history; create a follow-up task instead.
 - **`git push` during the task.** Blocked in the Copilot coding-agent environment; only `gh pr create` publishes. See Finalization protocol.
 - **Running Copilot code review / CodeQL before the PR exists.** Redundant — they run as PR checks. See Finalization protocol.
+- **Moving a task to `done/` without reviewing `README.md` and `AGENTS.md`.** Critical — stale docs poison every future agent session. If the task changes nothing those docs describe, state `README/AGENTS reviewed: no changes required` in the task notes; never skip the review silently.
+- **Scaffolding tasks in an un-bootstrapped template clone.** If `grep -r CopilotBlazorTemplate .` finds matches and the user is asking for a new app, defer to `.github/skills/bootstrap-new-app/SKILL.md` before any task creation — its rename phase must run first.
+- **Main agent authoring new persisted tasks for its own sub-steps.** Sub-decomposition stays in the agent's internal todo tool. Persisted `tasks/` folders are upstream artifacts — created by the user, by an audit/planning session, or by the bootstrap-new-app hand-off, never by the main agent in the middle of a run. A workshop attendee should see one task at most, not five auto-generated ones.
 
 ## References
 

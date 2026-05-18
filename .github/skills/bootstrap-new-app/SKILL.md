@@ -1,11 +1,13 @@
 ---
 name: bootstrap-new-app
-description: When planning the bootstrap of a brand-new app from a fresh clone of this template, ensure the plan begins with the rename-script gate and ends with the screenshots/demo refresh and README rewrite. Use PROACTIVELY before any feature work in a freshly-cloned `copilot-blazor-template` checkout. The plan itself is the agent's to design — this skill only fixes the bookends.
+description: MUST be invoked as the very first action whenever the working tree still contains the string `CopilotBlazorTemplate` AND the user's request describes building any new app, feature, or domain (e.g. "implement requirements for...", "build a... app", "create a... system"). Takes precedence over `task-orchestration` in this state — running `task-orchestration` first bakes template names into entities, migrations, namespaces, and tests, which then have to be unwound. The skill is short on purpose: it only fixes the three required bookend phases (rename, screenshots/demo, README); everything between them is the agent's plan to design.
 ---
 
 # Bootstrap a new app from this template
 
-When the agent plans a new-app bootstrap, the plan **must** include these phases. Everything between them is the agent's call.
+**Precondition check (run this first):** if `grep -rIlq CopilotBlazorTemplate . --exclude-dir={.git,bin,obj,node_modules}` finds matches, this skill applies and must be honored **before** invoking `task-orchestration` or writing any code. If it finds nothing, the app is already bootstrapped — fall through to `task-orchestration` as normal.
+
+When the agent plans a new-app bootstrap, the plan **must** include these phases. Everything between them is the agent's call. Track the plan in the agent's **internal todo tool** — do not create a persisted `tasks/` folder for the bootstrap (per `task-orchestration`: the main agent does not author persisted tasks).
 
 ## First phase — Rename & verify
 
