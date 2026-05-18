@@ -69,4 +69,4 @@ Open https://localhost:5001 (or the URL shown in console).
 
 ---
 
-> Scaffolded by [plan-dotnet-app](https://github.com/AgentiaPT/vera-skills) v1.3.0
+> Scaffolded by [plan-dotnet-app](https://github.com/rquintino/skills) v1.3.0
