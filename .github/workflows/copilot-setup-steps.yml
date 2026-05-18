@@ -1,11 +1,14 @@
 name: "Copilot Setup Steps"
 on: workflow_dispatch
 
+permissions:
+  contents: read
+
 jobs:
   copilot-setup-steps:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.x"
@@ -22,12 +25,10 @@ jobs:
           playwright-cli install --skills || true
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-      - name: Install Blazor Blueprint MCP
-        run: npx @blazorblueprint/mcp@latest || true
       - name: Restore and Build
         run: |
-          dotnet restore || true
-          dotnet build || true
+          dotnet restore
+          dotnet build
       - name: Verify versions
         run: |
           dotnet --version
