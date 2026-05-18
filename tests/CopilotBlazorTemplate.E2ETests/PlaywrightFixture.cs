@@ -17,17 +17,13 @@ public class PlaywrightFixture : IAsyncLifetime
 
     public IPlaywright PlaywrightInstance { get; private set; } = null!;
     public IBrowser Browser { get; private set; } = null!;
-    public string BaseUrl { get; private set; } = null!;
+    public string BaseUrl => _factory.BaseUrl;
 
     public async Task InitializeAsync()
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"e2e-{Guid.NewGuid():N}.db");
         _factory = new TestWebApplicationFactory(_dbPath);
-
-        // Touching Services triggers host build; CreateHost configures Kestrel on a free port.
-        var server = _factory.Services.GetRequiredService<IServer>();
-        var address = server.Features.Get<IServerAddressesFeature>()!.Addresses.First();
-        BaseUrl = address.TrimEnd('/');
+        _factory.Start();
 
         PlaywrightInstance = await Playwright.CreateAsync();
         Browser = await PlaywrightInstance.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
@@ -66,26 +62,31 @@ public class PlaywrightFixture : IAsyncLifetime
         var context = await NewContextAsync();
         var page = await context.NewPageAsync();
         await page.GotoAsync($"{BaseUrl}/Account/Login");
-        await page.FillAsync("#Input\\.Email", email);
-        await page.FillAsync("#Input\\.Password", password);
+        await page.GetByLabel("Email").FillAsync(email);
+        await page.GetByLabel("Password").FillAsync(password);
         await page.GetByRole(AriaRole.Button, new() { Name = "Log in" }).ClickAsync();
         await page.WaitForURLAsync("**/dashboard**");
         return page;
     }
 
+    // Runs two hosts: WebApplicationFactory's built-in in-memory TestServer (kept so WAF
+    // internals don't blow up) plus a real Kestrel host on a free port that Playwright hits.
     private sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         private readonly string _dbPath;
+        private IHost? _kestrelHost;
 
         public TestWebApplicationFactory(string dbPath) => _dbPath = dbPath;
 
+        public string BaseUrl { get; private set; } = null!;
+
+        public void Start()
+        {
+            using var _ = CreateDefaultClient();
+        }
+
         protected override IHost CreateHost(IHostBuilder builder)
         {
-            builder.ConfigureWebHost(web =>
-            {
-                web.UseKestrel();
-                web.UseUrls("http://127.0.0.1:0");
-            });
             builder.ConfigureServices(services =>
             {
                 var descriptor = services.SingleOrDefault(
@@ -96,7 +97,31 @@ public class PlaywrightFixture : IAsyncLifetime
                 services.AddDbContext<AppDbContext>(options =>
                     options.UseSqlite($"Data Source={_dbPath}"));
             });
-            return base.CreateHost(builder);
+
+            // Build the in-memory TestServer host first; WAF holds onto this.
+            var testHost = base.CreateHost(builder);
+
+            // Reconfigure the deferred builder for Kestrel on a free port and build again.
+            builder.ConfigureWebHost(web =>
+            {
+                web.UseKestrel();
+                web.UseUrls("http://127.0.0.1:0");
+            });
+            _kestrelHost = builder.Build();
+            _kestrelHost.Start();
+
+            var addresses = _kestrelHost.Services
+                .GetRequiredService<IServer>()
+                .Features.Get<IServerAddressesFeature>()!;
+            BaseUrl = addresses.Addresses.First().TrimEnd('/');
+
+            return testHost;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            _kestrelHost?.Dispose();
+            base.Dispose(disposing);
         }
     }
 }
